@@ -1,0 +1,11 @@
+{
+    "api_url": "http://localhost:20050",
+    "ca_name": "ca",
+    "container_name": "ca.ration_retailer.civil_supplies.com",
+    "identity": "admin",
+    "msp_id": "RationRetailerMSP",
+    "name": "RationRetailerCA",
+    "short_name": "RationRetailerCA",
+    "type": "fabric-ca",
+    "wallet": "RationRetailer"
+}

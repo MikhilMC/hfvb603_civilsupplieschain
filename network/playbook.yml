@@ -1,0 +1,233 @@
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+---
+  - name: Deploy civil supplies network
+    hosts: localhost
+    vars:
+      #
+      # For information on these configuration options, read the documentation:
+      # https://github.com/IBM-Blockchain/ansible-role-blockchain-platform-manager#example-playbook
+      #
+      infrastructure:
+        type: docker
+        docker:
+          network: civil_supplies
+      organizations:
+        - &Commisioner
+          msp:
+            id: "CommisionerMSP"
+            admin:
+              identity: "commisionerAdmin"
+              secret: "commisionerAdminpw"
+            ibp:
+              display_name: "Commisioner MSP"
+          ca: &CommisionerCA
+            id: "CommisionerCA"
+            admin_identity: "admin"
+            admin_secret: "adminpw"
+            tls:
+              enabled: false
+            docker:
+              name: ca.commisioner.civil_supplies.com
+              hostname: ca.commisioner.civil_supplies.com
+              port: 18050
+            ibp:
+              display_name: "Commisioner CA"
+          peers:
+            - &CommisionerPeer1
+              id: "CommisionerPeer1"
+              identity: "commisionerpeer1"
+              secret: "commisionerpeer1pw"
+              database_type: couchdb
+              tls:
+                enabled: false
+                identity: "commisionerpeer1tls"
+                secret: "commisionerpeer1tlspw"
+              docker:
+                name: peer0.commisioner.civil_supplies.com
+                hostname: peer0.commisioner.civil_supplies.com
+                port: 18051
+                chaincode_port: 18052
+                operations_port: 18053
+                couchdb:
+                  name: couchdb0.commisioner.civil_supplies.com
+                  hostname: couchdb0.commisioner.civil_supplies.com
+                  port: 18054
+              ibp:
+                display_name: "Commisioner Peer1"
+          nodes: "{{ playbook_dir }}/nodes/Commisioner"
+          wallet: "{{ playbook_dir }}/wallets/Commisioner"
+          gateways: "{{ playbook_dir }}/gateways/Commisioner"
+        - &NodalOfficer
+          msp:
+            id: "NodalOfficerMSP"
+            admin:
+              identity: "nodalOfficerAdmin"
+              secret: "nodalOfficerAdminpw"
+            ibp:
+              display_name: "Nodal Officer MSP"
+          ca: &NodalOfficerCA
+            id: "NodalOfficerCA"
+            admin_identity: "admin"
+            admin_secret: "adminpw"
+            tls:
+              enabled: false
+            docker:
+              name: ca.nodal_officer.civil_supplies.com
+              hostname: ca.nodal_officer.civil_supplies.com
+              port: 19050
+            ibp:
+              display_name: "Nodal Officer CA"
+          peers:
+            - &NodalOfficerPeer1
+              id: "NodalOfficerPeer1"
+              identity: "nodalofficerpeer1"
+              secret: "nodalofficerpeer1pw"
+              database_type: couchdb
+              tls:
+                enabled: false
+                identity: "nodalofficerpeer1tls"
+                secret: "nodalofficerpeer1tlspw"
+              docker:
+                name: peer0.nodal_officer.civil_supplies.com
+                hostname: peer0.nodal_officer.civil_supplies.com
+                port: 19051
+                chaincode_port: 19052
+                operations_port: 19053
+                couchdb:
+                  name: couchdb0.nodal_officer.civil_supplies.com
+                  hostname: couchdb0.nodal_officer.civil_supplies.com
+                  port: 19054
+              ibp:
+                display_name: "Nodal Officer Peer1"
+          nodes: "{{ playbook_dir }}/nodes/NodalOfficer"
+          wallet: "{{ playbook_dir }}/wallets/NodalOfficer"
+          gateways: "{{ playbook_dir }}/gateways/NodalOfficer"
+        - &RationRetailer
+          msp:
+            id: "RationRetailerMSP"
+            admin:
+              identity: "rationRetailerAdmin"
+              secret: "rationRetailerAdminpw"
+            ibp:
+              display_name: "Ration RationRetailerailer MSP"
+          ca: &RationRetailerCA
+            id: "RationRetailerCA"
+            admin_identity: "admin"
+            admin_secret: "adminpw"
+            tls:
+              enabled: false
+            docker:
+              name: ca.ration_retailer.civil_supplies.com
+              hostname: ca.ration_retailer.civil_supplies.com
+              port: 20050
+            ibp:
+              display_name: "Ration Retailer CA"
+          peers:
+            - &RationRetailerPeer1
+              id: "RationRetailerPeer1"
+              identity: "rationretailerpeer1"
+              secret: "rationretailerpeer1pw"
+              database_type: couchdb
+              tls:
+                enabled: false
+                identity: "rationretailerpeer1tls"
+                secret: "rationretailerpeer1tlspw"
+              docker:
+                name: peer0.ration_retailer.civil_supplies.com
+                hostname: peer0.ration_retailer.civil_supplies.com
+                port: 20051
+                chaincode_port: 20052
+                operations_port: 20053
+                couchdb:
+                  name: couchdb0.ration_retailer.civil_supplies.com
+                  hostname: couchdb0.ration_retailer.civil_supplies.com
+                  port: 20054
+              ibp:
+                display_name: "Ration Retailer Peer1"
+          nodes: "{{ playbook_dir }}/nodes/RationRetailer"
+          wallet: "{{ playbook_dir }}/wallets/RationRetailer"
+          gateways: "{{ playbook_dir }}/gateways/RationRetailer"
+        - &OrdererOrg
+          msp:
+            id: "OrdererMSP"
+            admin:
+              identity: "ordererAdmin"
+              secret: "ordererAdminpw"
+            ibp:
+              display_name: "Orderer MSP"
+          ca: &OrdererCA
+            id: "OrdererCA"
+            admin_identity: "admin"
+            admin_secret: "adminpw"
+            tls:
+              enabled: false
+            docker:
+              name: ca.orderer.example.com
+              hostname: ca.orderer.example.com
+              port: 17050
+            ibp:
+              display_name: "Orderer CA"
+          orderer: &Orderer
+            id: "Orderer1"
+            identity: "orderer1"
+            secret: "orderer1pw"
+            tls:
+              enabled: false
+              identity: "orderer1tls"
+              secret: "orderer1tlspw"
+            consortium:
+              members:
+                - *Commisioner
+                - *NodalOfficer
+                - *RationRetailer
+            docker:
+              name: orderer.example.com
+              hostname: orderer.example.com
+              port: 17051
+              operations_port: 17052
+            ibp:
+              display_name: "Orderer1"
+              cluster_name: "OrdererCluster"
+          nodes: "{{ playbook_dir }}/nodes/Orderer"
+          wallet: "{{ playbook_dir }}/wallets/Orderer"
+          gateways: "{{ playbook_dir }}/gateways/Orderer"
+      channels:
+        - &civilsupplieschannel
+          name: civilsupplieschannel
+          orderer: *Orderer
+          members:
+            - <<: *Commisioner
+              committing_peers:
+                - *CommisionerPeer1
+              anchor_peers:
+                - *CommisionerPeer1
+            - <<: *NodalOfficer
+              committing_peers:
+                - *NodalOfficerPeer1
+              anchor_peers:
+                - *NodalOfficerPeer1
+            - <<: *RationRetailer
+              committing_peers:
+                - *RationRetailerPeer1
+              anchor_peers:
+                - *RationRetailerPeer1
+      gateways:
+        - name: Commisioner gateway
+          organization:
+            <<: *Commisioner
+            gateway_peers:
+              - <<: *CommisionerPeer1
+        - name: Nodal Officer gateway
+          organization:
+            <<: *NodalOfficer
+            gateway_peers:
+              - <<: *NodalOfficerPeer1
+        - name: Ration Retailer gateway
+          organization:
+            <<: *RationRetailer
+            gateway_peers:
+              - <<: *RationRetailerPeer1
+    roles:
+      - ibm.blockchain_platform_manager

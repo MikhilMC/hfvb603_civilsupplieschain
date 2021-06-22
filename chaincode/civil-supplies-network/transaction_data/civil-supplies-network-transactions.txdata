@@ -1,0 +1,44 @@
+[
+    {
+        "transactionName": "civilSuppliesNetworkExists",
+        "transactionLabel": "A test civilSuppliesNetworkExists transaction",
+        "arguments": [
+            "001"
+        ],
+        "transientData": {}
+    },
+    {
+        "transactionName": "createCivilSuppliesNetwork",
+        "transactionLabel": "A test createCivilSuppliesNetwork transaction",
+        "arguments": [
+            "001",
+            "some value"
+        ],
+        "transientData": {}
+    },
+    {
+        "transactionName": "readCivilSuppliesNetwork",
+        "transactionLabel": "A test readCivilSuppliesNetwork transaction",
+        "arguments": [
+            "001"
+        ],
+        "transientData": {}
+    },
+    {
+        "transactionName": "updateCivilSuppliesNetwork",
+        "transactionLabel": "A test updateCivilSuppliesNetwork transaction",
+        "arguments": [
+            "001",
+            "some other value"
+        ],
+        "transientData": {}
+    },
+    {
+        "transactionName": "deleteCivilSuppliesNetwork",
+        "transactionLabel": "A test deleteCivilSuppliesNetwork transaction",
+        "arguments": [
+            "001"
+        ],
+        "transientData": {}
+    }
+]
