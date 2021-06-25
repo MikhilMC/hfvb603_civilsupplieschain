@@ -8,199 +8,191 @@ const { Contract } = require('fabric-contract-api');
 
 class CivilSuppliesNetworkContract extends Contract {
 
-    makeCharacterArray(base) {
-        return Array.from(Array(base)).map((e, i) => i.toString(base));
+  // nodalOfficerExists
+  // @param: nodalOfficerId
+  async nodalOfficerExists(ctx, nodalOfficerId) {
+    const buffer = await ctx.stub.getState(nodalOfficerId);
+    return (!!buffer && buffer.length > 0);
+  }
+
+  // createNodalOfficer
+  // properties: nodalOfficerId, district, taluk
+  // @params: nodalOfficerId, district, taluk
+  async createNodalOfficer(ctx, nodalOfficerId, district, taluk) {
+    const exists = await this.nodalOfficerExists(ctx, nodalOfficerId);
+    if (exists) {
+      throw new Error(`The Nodal Officer ${nodalOfficerId} already exist`);
     }
 
-    makeRandomStringId(array, len) {
-        let id = '';
-        for(let i = 0; i < len; i++) {
-            id += array[Math.floor(Math.random() * array.length)];
-        }
-        return id;
+    const asset = {
+      district,
+      taluk,
+      dataType: 'Nodal Officer'
+    };
+
+    const buffer = Buffer.from(JSON.stringify(asset));
+    await ctx.stub.putState(nodalOfficerId, buffer);
+  }
+
+  // readNodalOfficer
+  // @param: nodalOfficerId
+  async readNodalOfficer(ctx, nodalOfficerId) {
+    const exists = await this.nodalOfficerExists(ctx, nodalOfficerId);
+    if (!exists) {
+      throw new Error(`The Nodal Officer ${nodalOfficerId} does not exist`);
     }
 
-    // ------------------------START Commisioner-------------------------
-    
-    // nodalOfficerExists
-    // @params: nodalOfficerId
-    async nodalOfficerExists(ctx, nodalOfficerId) {
-        const buffer = await ctx.stub.getState(nodalOfficerId);
-        return (!!buffer && buffer.length > 0);
+    const buffer = await ctx.stub.getState(nodalOfficerId);
+    const asset = JSON.parse(buffer.toString());
+    return asset;
+  }
+
+  // updateNodalOfficer
+  // @params: nodalOfficerId, district, taluk
+  async updateNodalOfficer(ctx, nodalOfficerId, newDistrict, newTaluk) {
+    const exists = await this.nodalOfficerExists(ctx, nodalOfficerId);
+    if (!exists) {
+      throw new Error(`The Nodal Officer ${nodalOfficerId} does not exist`);
     }
 
-    // createNodalOfficer
-    // properties: district, taluk
-    async createNodalOfficer(ctx, district, taluk) {
-        let nodalOfficerId;
-        while (true) {
-            nodalOfficerId = this.makeRandomStringId(this.makeCharacterArray(10), 3);
-            const exists = await this.nodalOfficerExists(ctx, nodalOfficerId);
-            if (!exists) {
-                break;
-            }
-        }
-        const asset = {
-            district,
-            taluk,
-            dataType: 'Nodal Officer'
-        };
-        const buffer = Buffer.from(JSON.stringify(asset));
-        await ctx.stub.putState(nodalOfficerId, buffer);
-        return nodalOfficerId;
+    const asset = {
+      district: newDistrict,
+      taluk: newTaluk,
+      dataType: 'Nodal Officer'
+    };
+
+    const buffer = Buffer.from(JSON.stringify(asset));
+    await ctx.stub.putState(nodalOfficerId, buffer);
+  }
+
+  // deleteNodalOfficer
+  // @param: nodalOfficerId
+  async deleteNodalOfficer(ctx, nodalOfficerId) {
+    const exists = await this.nodalOfficerExists(ctx, nodalOfficerId);
+    if (!exists) {
+      throw new Error(`The Nodal Officer ${nodalOfficerId} does not exist`);
     }
 
-    // readNodalOfficer
-    // @params: nodalOfficerId
-    async readNodalOfficer(ctx, nodalOfficerId) {
-        const exists = await this.nodalOfficerExists(ctx, nodalOfficerId);
-        if (!exists) {
-            throw new Error(`The Nodal Officer ${nodalOfficerId} does not exist`);
-        }
-        const buffer = await ctx.stub.getState(nodalOfficerId);
-        const asset = JSON.parse(buffer.toString());
-        return asset;
+    await ctx.stub.deleteState(nodalOfficerId);
+  }
+
+  // rationRetailerExists
+  // @param: rationRetailerId
+  async rationRetailerExists(ctx, rationRetailerId) {
+    const buffer = await ctx.stub.getState(rationRetailerId);
+    return (!!buffer && buffer.length > 0);
+  }
+
+  // createRationRetailer
+  // properties: nodalOfficerId, LSGBody, wardNo
+  // @params: rationRetailerId, nodalOfficerId, LSGBody, wardNo
+  async createRationRetailer(
+    ctx,
+    rationRetailerId,
+    nodalOfficerId,
+    LSGBody,
+    wardNo
+  ) {
+    const exists = await this.rationRetailerExists(ctx, rationRetailerId);
+    if (exists) {
+      throw new Error(`The Ration Retailer ${rationRetailerId} already exist`);
     }
 
-    // updateNodalOfficer
-    // @params: nodalOfficerId, district, taluk
-    async updateNodalOfficer(ctx, nodalOfficerId, newDistrict, newTaluk) {
-        const exists = await this.nodalOfficerExists(ctx, nodalOfficerId);
-        if (!exists) {
-            throw new Error(`The Nodal Officer ${nodalOfficerId} does not exist`);
-        }
-        const asset = {
-            district: newDistrict,
-            taluk: newTaluk,
-            dataType: 'Nodal Officer'
-        };
-        const buffer = Buffer.from(JSON.stringify(asset));
-        await ctx.stub.putState(nodalOfficerId, buffer);
+    const officerExists = await this.nodalOfficerExists(ctx, nodalOfficerId);
+    if (!officerExists) {
+      throw new Error(`The Nodal Officer ${nodalOfficerId} does not exist`);
     }
 
-    // deleteNodalOfficer
-    // @params: nodalOfficerId
-    async deleteNodalOfficer(ctx, nodalOfficerId) {
-        const exists = await this.nodalOfficerExists(ctx, nodalOfficerId);
-        if (!exists) {
-            throw new Error(`The Nodal Officer ${nodalOfficerId} does not exist`);
-        }
-        await ctx.stub.deleteState(nodalOfficerId);
+    const asset = {
+      nodalOfficerId,
+      LSGBody,
+      wardNo,
+      dataType: 'Ration Retailer'
+    };
+
+    const buffer = Buffer.from(JSON.stringify(asset));
+    await ctx.stub.putState(rationRetailerId, buffer);
+  }
+
+  // readRationRetailer
+  // @param: rationRetailerId
+  async readRationRetailer(ctx, rationRetailerId) {
+    const exists = await this.rationRetailerExists(ctx, rationRetailerId);
+    if (!exists) {
+      throw new Error(`The Ration Retailer ${rationRetailerId} does not exist`);
     }
 
-    // rationRetailerExists
-    // @params: rationRetailerId
-    async rationRetailerExists(ctx, rationRetailerId) {
-        const buffer = await ctx.stub.getState(rationRetailerId);
-        return (!!buffer && buffer.length > 0);
+    const buffer = await ctx.stub.getState(rationRetailerId);
+    const asset = JSON.parse(buffer.toString());
+    return asset;
+  }
+
+  // updateRationRetailer
+  // @params: rationRetailerId, newNodalOfficerId, newLSGBody, newWardNo
+  async updateRationRetailer(
+    ctx,
+    rationRetailerId,
+    newNodalOfficerId,
+    newLSGBody,
+    newWardNo
+  ) {
+    const exists = await this.rationRetailerExists(ctx, rationRetailerId);
+    if (!exists) {
+      throw new Error(`The Ration Retailer ${rationRetailerId} does not exist`);
     }
 
-    // createRationRetailer
-    // properties: district, taluk, LSGBody, wardNo
-    // @params: district, taluk, LSGBody, wardNo
-    async createRationRetailer(ctx, district, taluk, LSGBody, wardNo) {
-        let rationRetailerId;
-        while (true) {
-            rationRetailerId = this.makeRandomStringId(this.makeCharacterArray(10), 5);
-            const exists = await this.rationRetailerExists(ctx, rationRetailerId);
-            if (!exists) {
-                break;
-            }
-        }
-        const asset = {
-            district,
-            taluk,
-            LSGBody,
-            wardNo,
-            dataType: 'Ration Retailer'
-        };
-        const buffer = Buffer.from(JSON.stringify(asset));
-        await ctx.stub.putState(rationRetailerId, buffer);
-        return rationRetailerId;
+    const officerExists = await this.nodalOfficerExists(ctx, newNodalOfficerId);
+    if (!officerExists) {
+      throw new Error(`The Nodal Officer ${newNodalOfficerId} does not exist`);
     }
 
-    // readRationRetailer
-    // @params: rationRetailerId
-    async readRationRetailer(ctx, rationRetailerId) {
-        const exists = await this.rationRetailerExists(ctx, rationRetailerId);
-        if (!exists) {
-            throw new Error(`The Ration Retailer ${rationRetailerId} does not exist`);
-        }
-        const buffer = await ctx.stub.getState(rationRetailerId);
-        const asset = JSON.parse(buffer.toString());
-        return asset;
+    const asset = {
+      nodalOfficerId: newNodalOfficerId,
+      LSGBody: newLSGBody,
+      wardNo: newWardNo,
+      dataType: 'Ration Retailer'
+    };
+
+    const buffer = Buffer.from(JSON.stringify(asset));
+    await ctx.stub.putState(rationRetailerId, buffer);
+  }
+
+  // deleteRationRetailer
+  // @param: rationRetailerId
+  async deleteRationRetailer(ctx, rationRetailerId) {
+    const exists = await this.rationRetailerExists(ctx, rationRetailerId);
+    if (!exists) {
+      throw new Error(`The Ration Retailer ${rationRetailerId} does not exist`);
     }
 
-    // updateRationRetailer
-    // @params: rationRetailerId, newDistrict, newTaluk, newLSGBody, newWardNo
-    async updateRationRetailer(ctx, rationRetailerId, newDistrict, newTaluk, newLSGBody, newWardNo) {
-        const exists = await this.rationRetailerExists(ctx, rationRetailerId);
-        if (!exists) {
-            throw new Error(`The Ration Retailer ${rationRetailerId} does not exist`);
-        }
-        const asset = {
-            district: newDistrict,
-            taluk: newTaluk,
-            LSGBody: newLSGBody,
-            wardNo: newWardNo,
-            dataType: 'Ration Retailer'
-        };
-        const buffer = Buffer.from(JSON.stringify(asset));
-        await ctx.stub.putState(rationRetailerId, buffer);
-    }
+    await ctx.stub.deleteState(rationRetailerId);
+  }
 
-    // deleteRationRetailer
-    // @params: rationRetailerId
-    async deleteRationRetailer(ctx, rationRetailerId) {
-        const exists = await this.rationRetailerExists(ctx, rationRetailerId);
-        if (!exists) {
-            throw new Error(`The Ration Retailer ${rationRetailerId} does not exist`);
-        }
-        await ctx.stub.deleteState(rationRetailerId);
-    }
+  // rationCardExist
+  // @param: rationCardNumber
+  // async rationCardExist(ctx, rationCardNumber) {
+  //   const buffer = await ctx.stub.getState(rationCardNumber);
+  //   return (!!buffer && buffer.length > 0);
+  // }
 
-    // async civilSuppliesNetworkExists(ctx, civilSuppliesNetworkId) {
-    //     const buffer = await ctx.stub.getState(civilSuppliesNetworkId);
-    //     return (!!buffer && buffer.length > 0);
-    // }
+  // createRationCard
+  // properties: nodalOfficerId, rationRetailerId, familyHead, houseNumber,
+  //             familyMembers, income, mobileNumber
+  // @params: rationCardNumber, nodalOfficerId, rationRetailerId, familyHead, houseNumber,
+  //             familyMembers, income, mobileNumber
+  // async createRationCard(
+  //   ctx,
+  //   rationCardNumber,
+  //   nodalOfficerId,
+  //   rationRetailerId,
+  //   familyHead,
+  //   houseNumber,
+  //   familyMembers,
+  //   income,
+  //   mobileNumber
+  // ) {
 
-    // async createCivilSuppliesNetwork(ctx, civilSuppliesNetworkId, value) {
-    //     const exists = await this.civilSuppliesNetworkExists(ctx, civilSuppliesNetworkId);
-    //     if (exists) {
-    //         throw new Error(`The civil supplies network ${civilSuppliesNetworkId} already exists`);
-    //     }
-    //     const asset = { value };
-    //     const buffer = Buffer.from(JSON.stringify(asset));
-    //     await ctx.stub.putState(civilSuppliesNetworkId, buffer);
-    // }
-
-    // async readCivilSuppliesNetwork(ctx, civilSuppliesNetworkId) {
-    //     const exists = await this.civilSuppliesNetworkExists(ctx, civilSuppliesNetworkId);
-    //     if (!exists) {
-    //         throw new Error(`The civil supplies network ${civilSuppliesNetworkId} does not exist`);
-    //     }
-    //     const buffer = await ctx.stub.getState(civilSuppliesNetworkId);
-    //     const asset = JSON.parse(buffer.toString());
-    //     return asset;
-    // }
-
-    // async updateCivilSuppliesNetwork(ctx, civilSuppliesNetworkId, newValue) {
-    //     const exists = await this.civilSuppliesNetworkExists(ctx, civilSuppliesNetworkId);
-    //     if (!exists) {
-    //         throw new Error(`The civil supplies network ${civilSuppliesNetworkId} does not exist`);
-    //     }
-    //     const asset = { value: newValue };
-    //     const buffer = Buffer.from(JSON.stringify(asset));
-    //     await ctx.stub.putState(civilSuppliesNetworkId, buffer);
-    // }
-
-    // async deleteCivilSuppliesNetwork(ctx, civilSuppliesNetworkId) {
-    //     const exists = await this.civilSuppliesNetworkExists(ctx, civilSuppliesNetworkId);
-    //     if (!exists) {
-    //         throw new Error(`The civil supplies network ${civilSuppliesNetworkId} does not exist`);
-    //     }
-    //     await ctx.stub.deleteState(civilSuppliesNetworkId);
-    // }
+  // }
 
 }
 
