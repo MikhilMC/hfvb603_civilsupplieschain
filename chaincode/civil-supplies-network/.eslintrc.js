@@ -13,7 +13,7 @@ module.exports = {
     },
     extends: "eslint:recommended",
     rules: {
-        indent: ['error', 4],
+        indent: ['error', 2],
         quotes: ['error', 'single'],
         semi: ['error', 'always'],
         'no-unused-vars': ['error', { args: 'none' }],

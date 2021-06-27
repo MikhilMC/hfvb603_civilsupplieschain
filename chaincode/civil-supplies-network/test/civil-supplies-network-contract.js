@@ -44,6 +44,7 @@ describe('CivilSuppliesNetworkContract', () => {
       taluk: 'Thrissur',
       dataType: 'Nodal Officer'
     };
+
     let nodalOfficer2 = {
       district: 'Thrissur',
       taluk: 'Chavakkad',
@@ -53,20 +54,100 @@ describe('CivilSuppliesNetworkContract', () => {
     let rationRetailer1 = {
       nodalOfficerId: '10',
       LSGBody: 'Arimpur',
-      wardNO: '4',
+      wardNumber: '4',
       dataType: 'Ration Retailer'
     };
+
     let rationRetailer2 = {
       nodalOfficerId: '10',
       LSGBody: 'Arimpur',
-      wardNO: '5',
+      wardNumber: '5',
       dataType: 'Ration Retailer'
+    };
+
+    let rationRetailer3 = {
+      nodalOfficerId: '10',
+      LSGBody: 'Manalur',
+      wardNumber: '5',
+      dataType: 'Ration Retailer'
+    };
+
+    let rationRetailer4 = {
+      nodalOfficerId: '11',
+      LSGBody: 'Thrithallur',
+      wardNumber: '7',
+      dataType: 'Ration Retailer'
+    };
+
+    let rationCard1 = {
+      nodalOfficerId: '10',
+      rationRetailerId: '100',
+      district: 'Thrissur',
+      taluk: 'Thrissur',
+      LSGBody: 'Arimpur',
+      wardNumber: '4',
+      familyHead: 'Regha',
+      houseNumber: '234',
+      income: 25000,
+      mobileNumber: '9497625356',
+      rationCardType: 'Non-priority with State subsidy',
+      dataType: 'Ration Card'
+    };
+
+    let rationCard2 = {
+      nodalOfficerId: '10',
+      rationRetailerId: '100',
+      district: 'Thrissur',
+      taluk: 'Thrissur',
+      LSGBody: 'Arimpur',
+      wardNumber: '4',
+      familyHead: 'Indira',
+      houseNumber: '235',
+      income: 64000,
+      mobileNumber: '9897625356',
+      rationCardType: 'Non-priority and non-subsidy',
+      dataType: 'Ration Card'
+    }
+
+    let consumer1 = {
+      consumerNumber: '1000000000000000',
+      rationCardNumber: '1000000000',
+      nodalOfficerId: '10',
+      rationRetailerId: '100',
+      name: 'Regha',
+      age: '52',
+      occupation: 'Clerk',
+      dataType: 'Consumer Account'
+    }
+
+    let consumer2 = {
+      consumerNumber: '1000000000000001',
+      rationCardNumber: '1000000000',
+      nodalOfficerId: '10',
+      rationRetailerId: '100',
+      name: 'Mohanan',
+      age: '56',
+      occupation: 'Farmer',
+      dataType: 'Consumer Account'
     }
 
     ctx.stub.getState.withArgs('10').resolves(Buffer.from(JSON.stringify(nodalOfficer1)));
     ctx.stub.getState.withArgs('11').resolves(Buffer.from(JSON.stringify(nodalOfficer2)));
+
     ctx.stub.getState.withArgs('100').resolves(Buffer.from(JSON.stringify(rationRetailer1)));
     ctx.stub.getState.withArgs('101').resolves(Buffer.from(JSON.stringify(rationRetailer2)));
+    ctx.stub.getState.withArgs('102').resolves(Buffer.from(JSON.stringify(rationRetailer3)));
+    ctx.stub.getState.withArgs('103').resolves(Buffer.from(JSON.stringify(rationRetailer4)));
+
+    ctx.stub.getState.withArgs('1000000000')
+      .resolves(Buffer.from(JSON.stringify(rationCard1)));
+    ctx.stub.getState.withArgs('1000000001')
+      .resolves(Buffer.from(JSON.stringify(rationCard2)));
+    
+    ctx.stub.getState.withArgs('1000000000000000')
+      .resolves(Buffer.from(JSON.stringify(consumer1)));
+    ctx.stub.getState.withArgs('1000000000000001')
+      .resolves(Buffer.from(JSON.stringify(consumer2)));
   });
 
   describe('#nodalOfficerExists', () => {
@@ -164,7 +245,7 @@ describe('CivilSuppliesNetworkContract', () => {
     });
 
     it('should return false for a ration retailer that does not exist', async () => {
-      await contract.rationRetailerExists(ctx, '103').should.eventually.be.false;
+      await contract.rationRetailerExists(ctx, '105').should.eventually.be.false;
     });
 
   });
@@ -176,13 +257,13 @@ describe('CivilSuppliesNetworkContract', () => {
       let retailer = {
         nodalOfficerId: '11',
         LSGBody: 'Vatanappally',
-        wardNo: '4',
+        wardNumber: '4',
         dataType: 'Ration Retailer'
       }
 
-      await contract.createRationRetailer(ctx, '102', '11', 'Vatanappally', '4');
+      await contract.createRationRetailer(ctx, '104', '11', 'Vatanappally', '4');
       ctx.stub.putState.should.have.been.calledOnceWithExactly(
-        '102', Buffer.from(JSON.stringify(retailer))
+        '104', Buffer.from(JSON.stringify(retailer))
       );
     });
 
@@ -192,8 +273,8 @@ describe('CivilSuppliesNetworkContract', () => {
     });
 
     it('should throw an error for a nodal officer that does not exist', async () => {
-      await contract.createRationRetailer(ctx, '103', '13', 'Thrissur', '3')
-      .should.be.rejectedWith(/The Nodal Officer 13 does not exist/);
+      await contract.createRationRetailer(ctx, '104', '13', 'Thrissur', '3')
+        .should.be.rejectedWith(/The Nodal Officer 13 does not exist/);
     });
 
   });
@@ -204,14 +285,14 @@ describe('CivilSuppliesNetworkContract', () => {
       await contract.readRationRetailer(ctx, '100').should.eventually.deep.equal({
         nodalOfficerId: '10',
         LSGBody: 'Arimpur',
-        wardNO: '4',
+        wardNumber: '4',
         dataType: 'Ration Retailer'
       });
     });
 
     it('should throw an error for a ration retailer that does not exist', async () => {
-      await contract.readRationRetailer(ctx, '103')
-        .should.be.rejectedWith(/The Ration Retailer 103 does not exist/);
+      await contract.readRationRetailer(ctx, '105')
+        .should.be.rejectedWith(/The Ration Retailer 105 does not exist/);
     });
 
   });
@@ -222,7 +303,7 @@ describe('CivilSuppliesNetworkContract', () => {
       let officer = {
         nodalOfficerId: '11',
         LSGBody: 'Chavakkad',
-        wardNo: '22',
+        wardNumber: '22',
         dataType: 'Ration Retailer'
       }
 
@@ -233,13 +314,13 @@ describe('CivilSuppliesNetworkContract', () => {
     });
 
     it('should throw an error for a ration retailer that does not exist', async () => {
-      await contract.updateRationRetailer(ctx, '103', '11', 'Thrissur', '22')
-      .should.be.rejectedWith(/The Ration Retailer 103 does not exist/);
+      await contract.updateRationRetailer(ctx, '105', '11', 'Thrissur', '22')
+        .should.be.rejectedWith(/The Ration Retailer 105 does not exist/);
     });
 
     it('should throw an error for a nodal officer that does not exist', async () => {
       await contract.updateRationRetailer(ctx, '100', '13', 'Thrissur', '22')
-      .should.be.rejectedWith(/The Nodal Officer 13 does not exist/);
+        .should.be.rejectedWith(/The Nodal Officer 13 does not exist/);
     });
 
   });
@@ -252,8 +333,251 @@ describe('CivilSuppliesNetworkContract', () => {
     });
 
     it('should throw an error for a ration retailer that does not exist', async () => {
-      await contract.deleteRationRetailer(ctx, '103')
-        .should.be.rejectedWith(/The Ration Retailer 103 does not exist/);
+      await contract.deleteRationRetailer(ctx, '105')
+        .should.be.rejectedWith(/The Ration Retailer 105 does not exist/);
+    });
+
+  });
+
+  describe('#rationCardExist', () => {
+
+    it('should return true for a ration card', async () => {
+      await contract.rationCardExist(ctx, '1000000000').should.eventually.be.true;
+    });
+
+    it('should return false for a ration card that does not exist', async () => {
+      await contract.rationCardExist(ctx, '1000000003').should.eventually.be.false;
+    });
+
+  });
+
+  describe('#createRationCard', () => {
+
+    it('should create a ration card', async () => {
+      // "102", "11", "Vatanappally", "4"
+
+      await contract.createRationCard(ctx,'1000000002','100','Sini','233','15000','9896625356');
+      ctx.stub.putState.should.have.been.calledOnceWithExactly(
+        '1000000002', Buffer.from('{"nodalOfficerId":"10","rationRetailerId":"100","district":"Thrissur","taluk":"Thrissur","LSGBody":"Arimpur","wardNumber":"4","familyHead":"Sini","houseNumber":"233","income":"15000","mobileNumber":"9896625356","rationCardType":"Priority House Holds","dataType":"Ration Card"}'));
+    });
+
+    it('should throw an error for a ration card that already exists', async () => {
+      await contract.createRationCard(ctx, '1000000000','100','Sini','233','15000','9896625356')
+        .should.be.rejectedWith(/The Ration Card 1000000000 already exist/);
+    });
+
+    it('should throw an error for a ration retailer does not exists', async () => {
+      await contract.createRationCard(ctx, '1000000002','105','Sini','233','15000','9896625356')
+        .should.be.rejectedWith(/The Ration Retailer 105 does not exist/);
+    });
+
+  });
+
+  describe('#readRationCard', () => {
+
+    it('should return a ration card', async () => {
+      await contract.readRationCard(ctx, '1000000000').should.eventually.deep.equal({
+        nodalOfficerId: '10',
+        rationRetailerId: '100',
+        district: 'Thrissur',
+        taluk: 'Thrissur',
+        LSGBody: 'Arimpur',
+        wardNumber: '4',
+        familyHead: 'Regha',
+        houseNumber: '234',
+        income: 25000,
+        mobileNumber: '9497625356',
+        rationCardType: 'Non-priority with State subsidy',
+        dataType: 'Ration Card'
+      });
+    });
+
+    it('should throw an error for a ration card that does not exist', async () => {
+      await contract.readRationCard(ctx, '1000000003')
+        .should.be.rejectedWith(/The Ration Card 1000000003 does not exist/);
+    });
+
+  });
+
+  describe('#deleteRationCard', () => {
+
+    it('should delete a ration card', async () => {
+      await contract.deleteRationCard(ctx, '1000000001');
+      ctx.stub.deleteState.should.have.been.calledOnceWithExactly('1000000001');
+    });
+
+    it('should throw an error for a ration card that does not exist', async () => {
+      await contract.deleteRationCard(ctx, '1000000003')
+        .should.be.rejectedWith(/The Ration Card 1000000003 does not exist/);
+    });
+
+  });
+
+  describe('#shiftHouseInSameWard', () => {
+
+    it('should change the house number of the ration card', async () => {
+
+      await contract.shiftHouseInSameWard(ctx,'1000000000','456');
+      ctx.stub.putState.should.have.been.calledOnceWithExactly(
+        '1000000000', Buffer.from('{"nodalOfficerId":"10","rationRetailerId":"100","district":"Thrissur","taluk":"Thrissur","LSGBody":"Arimpur","wardNumber":"4","familyHead":"Regha","houseNumber":"456","income":25000,"mobileNumber":"9497625356","rationCardType":"Non-priority with State subsidy","dataType":"Ration Card"}'));
+    });
+
+    it('should throw an error for a ration card that does not exists', async () => {
+      await contract.shiftHouseInSameWard(ctx, '1000000003','100')
+        .should.be.rejectedWith(/The Ration Card 1000000003 does not exist/);
+    });
+
+  });
+
+  describe('#shiftHouseInSameLSGBody', () => {
+
+    it('should change the house number, ward number, and ration retailer ID of the ration card', async () => {
+
+      await contract.shiftHouseInSameLSGBody(ctx,'1000000000','456', '101');
+      ctx.stub.putState.should.have.been.calledOnceWithExactly(
+        '1000000000', Buffer.from('{"nodalOfficerId":"10","rationRetailerId":"101","district":"Thrissur","taluk":"Thrissur","LSGBody":"Arimpur","wardNumber":"5","familyHead":"Regha","houseNumber":"456","income":25000,"mobileNumber":"9497625356","rationCardType":"Non-priority with State subsidy","dataType":"Ration Card"}'));
+    });
+
+    it('should throw an error for a ration card that does not exists', async () => {
+      await contract.shiftHouseInSameLSGBody(ctx, '1000000003','100', '101')
+        .should.be.rejectedWith(/The Ration Card 1000000003 does not exist/);
+    });
+
+    it('should throw an error for a ration retailer does not exists', async () => {
+      await contract.shiftHouseInSameLSGBody(ctx, '1000000000','100', '105')
+        .should.be.rejectedWith(/The Ration Retailer 105 does not exist/);
+    });
+
+  });
+
+  describe('#shiftHouseInSameTaluk', () => {
+
+    it('should change the house number, ward number, LSG body, and ration retailer ID of the ration card', async () => {
+
+      await contract.shiftHouseInSameTaluk(ctx,'1000000000','456', '102');
+      ctx.stub.putState.should.have.been.calledOnceWithExactly(
+        '1000000000', Buffer.from('{"nodalOfficerId":"10","rationRetailerId":"102","district":"Thrissur","taluk":"Thrissur","LSGBody":"Manalur","wardNumber":"5","familyHead":"Regha","houseNumber":"456","income":25000,"mobileNumber":"9497625356","rationCardType":"Non-priority with State subsidy","dataType":"Ration Card"}'));
+    });
+
+    it('should throw an error for a ration card that does not exists', async () => {
+      await contract.shiftHouseInSameTaluk(ctx, '1000000003','100', '101')
+        .should.be.rejectedWith(/The Ration Card 1000000003 does not exist/);
+    });
+
+    it('should throw an error for a ration retailer does not exists', async () => {
+      await contract.shiftHouseInSameTaluk(ctx, '1000000000','100', '105')
+        .should.be.rejectedWith(/The Ration Retailer 105 does not exist/);
+    });
+
+  });
+
+  describe('#shiftHouseToAnotherTaluk', () => {
+
+    it('should change the house number, ward number, LSG body, taluk, district, nodal officer id and ration retailer ID of the ration card', async () => {
+
+      await contract.shiftHouseToAnotherTaluk(ctx,'1000000000','456', '103');
+      ctx.stub.putState.should.have.been.calledOnceWithExactly(
+        '1000000000', Buffer.from('{"nodalOfficerId":"11","rationRetailerId":"103","district":"Thrissur","taluk":"Chavakkad","LSGBody":"Thrithallur","wardNumber":"7","familyHead":"Regha","houseNumber":"456","income":25000,"mobileNumber":"9497625356","rationCardType":"Non-priority with State subsidy","dataType":"Ration Card"}'));
+    });
+
+    it('should throw an error for a ration card that does not exists', async () => {
+      await contract.shiftHouseToAnotherTaluk(ctx, '1000000003','100', '101')
+        .should.be.rejectedWith(/The Ration Card 1000000003 does not exist/);
+    });
+
+    it('should throw an error for a ration retailer does not exists', async () => {
+      await contract.shiftHouseToAnotherTaluk(ctx, '1000000000','100', '105')
+        .should.be.rejectedWith(/The Ration Retailer 105 does not exist/);
+    });
+
+  });
+
+  describe('#changeMobileNumber', () => {
+
+    it('should change the mobile number of the ration card', async () => {
+
+      await contract.changeMobileNumber(ctx,'1000000000','9876543210');
+      ctx.stub.putState.should.have.been.calledOnceWithExactly(
+        '1000000000', Buffer.from('{"nodalOfficerId":"10","rationRetailerId":"100","district":"Thrissur","taluk":"Thrissur","LSGBody":"Arimpur","wardNumber":"4","familyHead":"Regha","houseNumber":"234","income":25000,"mobileNumber":"9876543210","rationCardType":"Non-priority with State subsidy","dataType":"Ration Card"}'));
+    });
+
+    it('should throw an error for a ration card that does not exists', async () => {
+      await contract.changeMobileNumber(ctx, '1000000003','9876543210')
+        .should.be.rejectedWith(/The Ration Card 1000000003 does not exist/);
+    });
+
+  });
+
+  describe('#changeIncome', () => {
+
+    it('should change the income and type of the ration card', async () => {
+
+      await contract.changeIncome(ctx,'1000000000','20000');
+      ctx.stub.putState.should.have.been.calledOnceWithExactly(
+        '1000000000', Buffer.from('{"nodalOfficerId":"10","rationRetailerId":"100","district":"Thrissur","taluk":"Thrissur","LSGBody":"Arimpur","wardNumber":"4","familyHead":"Regha","houseNumber":"234","income":"20000","mobileNumber":"9497625356","rationCardType":"Priority House Holds","dataType":"Ration Card"}'));
+    });
+
+    it('should throw an error for a ration card that does not exists', async () => {
+      await contract.changeIncome(ctx, '1000000003','9876543210')
+        .should.be.rejectedWith(/The Ration Card 1000000003 does not exist/);
+    });
+
+  });
+
+  describe('#addFamilyMember', () => {
+
+    it('should add one family member', async () => {
+
+      await contract.addFamilyMember(ctx,'1000000000000002','1000000000','Mikhil','28','Unemployed');
+      
+      ctx.stub.putState.should.have.been.calledOnceWithExactly(
+        '1000000000000002', Buffer.from('{"consumerNumber":"1000000000000002","rationCardNumber":"1000000000","nodalOfficerId":"10","rationRetailerId":"100","name":"Mikhil","age":"28","occupation":"Unemployed","dataType":"Consumer Account"}'));
+    });
+
+    it('should throw an error for a customer that already exists', async () => {
+      await contract.addFamilyMember(ctx,'1000000000000000','1000000000','Mikhil','28','Unemployed')
+        .should.be.rejectedWith(/The Consumer 1000000000000000 already exist/);
+    });
+
+    it('should throw an error for a ration card that does not exists', async () => {
+      await contract.addFamilyMember(ctx,'10000000000000000','1000000003','Regha','52','Clerk')
+        .should.be.rejectedWith(/The Ration Card 1000000003 does not exist/);
+    });
+
+  });
+
+  describe('#readFamilyMember', () => {
+
+    it('should return a ration card', async () => {
+      await contract.readFamilyMember(ctx, '1000000000000000').should.eventually.deep.equal({
+        consumerNumber: '1000000000000000',
+        rationCardNumber: '1000000000',
+        nodalOfficerId: '10',
+        rationRetailerId: '100',
+        name: 'Regha',
+        age: '52',
+        occupation: 'Clerk',
+        dataType: 'Consumer Account'
+      });
+    });
+
+    it('should throw an error for a customer that does not exists', async () => {
+      await contract.readFamilyMember(ctx,'1000000000000002')
+        .should.be.rejectedWith(/The Consumer 1000000000000002 does not exist/);
+    });
+
+  });
+
+  describe('#deleteFamilyMember', () => {
+
+    it('should delete a family member', async () => {
+      await contract.deleteFamilyMember(ctx, '1000000000000001');
+      ctx.stub.deleteState.should.have.been.calledOnceWithExactly('1000000000000001');
+    });
+
+    it('should throw an error for a ration card that does not exist', async () => {
+      await contract.deleteFamilyMember(ctx, '1000000000000002')
+        .should.be.rejectedWith(/The Consumer 1000000000000002 does not exist/);
     });
 
   });
