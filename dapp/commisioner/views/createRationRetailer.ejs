@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>
+    <%=title%>
+  </title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link rel="stylesheet" href="/stylesheets/bootstrap.min.css" />
+  <link rel='stylesheet' href='/stylesheets/dashboard.css' />
+</head>
+
+<body>
+  <h1>
+    <%= title%>
+  </h1>
+  <div class="form-modal">
+
+    <div id="man-form">
+      <h3>
+        <%= subTitle1%>
+      </h3>
+      <form id="manform" action="/createRationRetailer/submit" method="POST"
+        onsubmit="return validateCreateRationRetailerForm();">
+        <table id="form-table">
+          <tr>
+            <td>
+              <input name="rationRetailerId1" id="rationRetailerId1" class="form-control" type="text" placeholder="Enter Ration Retailer ID" />
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <input name="nodalOfficerId" id="nodalOfficerId" class="form-control" type="text" placeholder="Enter Nodal Officer ID" />
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <input name="LSGBody" id="LSGBody" class="form-control" type="text" placeholder="Enter LSG Body" />
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <input name="wardNumber" id="wardNumber" class="form-control" type="text" placeholder="Enter Ward Number" />
+            </td>
+          </tr>
+        </table>
+        <button type="submit" class="btn login fs-5 fw-bold mt-3"><%=subTitle1%></button>
+  
+      </form>
+
+    </div>
+
+    <div class="form-modal">
+
+      <div id="man-form">
+        <h3>
+          <%= subTitle2%>
+        </h3>
+        <form id="manform" action="/readRationRetailer" method="POST" onsubmit="return validateReadRationRetailerForm();">
+          <table>
+
+            <input name="rationRetailerId2" id="rationRetailerId2" class="form-control" type="text"
+              placeholder="Enter Ration Retailer ID" />
+          </table>
+          <button type="submit" class="btn login fs-5 fw-bold mt-3">
+            <%= subTitle2%>
+          </button>
+
+        </form>
+
+      </div>
+
+
+      <br>
+
+    </div>
+    <!-- <div class="form-model">
+
+    <div id="man-form">
+      <h3><%= title%></h3>
+      
+        
+  
+    </div>
+  </div> -->
+    <script src="/javascripts/popper.js"></script> -->
+    <script src="/javascripts/bootstrap.min.js"></script>
+    <script src="/javascripts/index.js"></script>
+</body>
+
+</html>

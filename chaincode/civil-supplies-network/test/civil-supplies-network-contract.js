@@ -173,7 +173,7 @@ describe('CivilSuppliesNetworkContract', () => {
       nodalOfficerId: '10',
       rationRetailerId: '100',
       name: 'Regha',
-      age: '52',
+      age: 55,
       sex: 'Female',
       occupation: 'Clerk',
       individualIncome: 12500,
@@ -187,7 +187,7 @@ describe('CivilSuppliesNetworkContract', () => {
       nodalOfficerId: '10',
       rationRetailerId: '100',
       name: 'Mohanan',
-      age: '56',
+      age: 59,
       sex: 'Male',
       occupation: 'Farmer',
       individualIncome: 12500,
@@ -1023,7 +1023,7 @@ describe('CivilSuppliesNetworkContract', () => {
         nodalOfficerId: '10',
         rationRetailerId: '100',
         name: 'Mikhil',
-        age: '28',
+        age: 28,
         sex: 'Male',
         occupation: 'Unemployed',
         individualIncome: 0,
@@ -1031,7 +1031,7 @@ describe('CivilSuppliesNetworkContract', () => {
         dataType: 'Consumer Account'
       }
 
-      await contract.addConsumer(ctx, '1000000000000002', '1000000000', 'Mikhil', '28', 'Male', 'Unemployed', 0, false);
+      await contract.addConsumer(ctx, '1000000000000002', '1000000000', 'Mikhil', 28, 'Male', 'Unemployed', 0);
 
       ctx.stub.putState.should.have.been.calledWithExactly(
         '100', Buffer.from(JSON.stringify(retailer))
@@ -1063,7 +1063,7 @@ describe('CivilSuppliesNetworkContract', () => {
         nodalOfficerId: '10',
         rationRetailerId: '100',
         name: 'Regha',
-        age: '52',
+        age: 55,
         sex: 'Female',
         occupation: 'Clerk',
         individualIncome: 12500,
@@ -1161,7 +1161,7 @@ describe('CivilSuppliesNetworkContract', () => {
           nodalOfficerId: '10',
           rationRetailerId: '100',
           name: 'Rekha',
-          age: '54',
+          age: 54,
           sex: 'Female',
           occupation: 'Clerk',
           individualIncome: 12500,
@@ -1224,7 +1224,7 @@ describe('CivilSuppliesNetworkContract', () => {
         nodalOfficerId: '10',
         rationRetailerId: '100',
         name: 'Regha',
-        age: '52',
+        age: 55,
         sex: 'Female',
         occupation: 'Clerk',
         individualIncome: 10000,
@@ -1325,7 +1325,7 @@ describe('CivilSuppliesNetworkContract', () => {
         nodalOfficerId: '11',
         rationRetailerId: '103',
         name: 'Regha',
-        age: '52',
+        age: 55,
         sex: 'Female',
         occupation: 'Clerk',
         individualIncome: 12500,
@@ -1501,6 +1501,7 @@ describe('CivilSuppliesNetworkContract', () => {
       let consumerPurchase = {
         consumerPurchaseNumber: '1000000000000000000000001',
         retailerPurchaseNumber: '10000000000000000000',
+        rationCardNumber: '1000000000',
         nodalOfficerId: '10',
         rationRetailerId: '100',
         itemName: 'Rice',
@@ -1538,6 +1539,7 @@ describe('CivilSuppliesNetworkContract', () => {
       let consumerPurchase = {
         consumerPurchaseNumber: '1000000000000000000000001',
         retailerPurchaseNumber: '10000000000000000001',
+        rationCardNumber: '1000000000',
         nodalOfficerId: '10',
         rationRetailerId: '100',
         itemName: 'Kerosine',
@@ -1568,6 +1570,44 @@ describe('CivilSuppliesNetworkContract', () => {
 
     it('should throw an error for a ration card does not exists', async () => {
       await contract.makeConsumerPurchase(ctx, '1000000000000000000000001', '10000000000000000000', '1000000003')
+        .should.be.rejectedWith(/The Ration Card 1000000003 does not exist/);
+    });
+
+  });
+
+  describe('#determineFamilyHead', () => {
+
+    it('should determine the head of the family', async () => {
+      await contract.determineFamilyHead(ctx, '1000000000').should.eventually.deep.equal({
+        isFamilyHeadAvailable: true,
+        name: 'Regha',
+        age: 55,
+        sex: 'Female',
+        id: '1000000000000000'
+      });
+    });
+
+    it('should throw an error for a ration card that does not exists', async () => {
+      await contract.determineFamilyHead(ctx, '1000000003')
+        .should.be.rejectedWith(/The Ration Card 1000000003 does not exist/);
+    });
+
+  });
+
+  describe('#getFamilyMembers', () => {
+
+    it('should determine the head of the family', async () => {
+      await contract.getFamilyMembers(ctx, '1000000000000000').should.eventually.deep.equal({
+        isFamilyHeadAvailable: true,
+        name: 'Regha',
+        age: 55,
+        sex: 'Female',
+        id: '1000000000000000'
+      });
+    });
+
+    it('should throw an error for a ration card that does not exists', async () => {
+      await contract.determineFamilyHead(ctx, '1000000003')
         .should.be.rejectedWith(/The Ration Card 1000000003 does not exist/);
     });
 

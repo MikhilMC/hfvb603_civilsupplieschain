@@ -5,6 +5,7 @@
 'use strict';
 
 const { Contract } = require('fabric-contract-api');
+const shim = require('fabric-shim');
 
 class CivilSuppliesNetworkContract extends Contract {
 
@@ -32,28 +33,31 @@ class CivilSuppliesNetworkContract extends Contract {
     const type1 = this.determineRationCardType(currentIncome, currentMembers);
     const type2 = this.determineRationCardType(newIncome, newMembers);
     if (type1['type'] === type2['type'] && type1['colour'] === type2['colour']) {
-      return { changeOccure: false };
+      return { changeOccure: false, status: 'No change' };
+    } else if (type1['type'] === null && type1['colour'] === null) {
+      return {
+        changeOccure: true,
+        status: 'Current Family Empty',
+        type: type2['type'],
+        newColour: type2['colour']
+      };
+    } else if (type2['type'] === null && type2['colour'] === null) {
+      return {
+        changeOccure: true,
+        status: 'New Family Empty',
+        type: type1['type'],
+        oldColour: type1['colour']
+      };
     } else {
       return {
         changeOccure: true,
+        status: 'Change occures',
         type: type2['type'],
-        colour: type2['colour'],
+        newColour: type2['colour'],
         oldColour: type1['colour']
       };
     }
   }
-
-  // makeCharacterArray(len) {
-  //   return Array.from(Array(len)).map((e, i) => i.toString(len));
-  // }
-
-  // makeRandomId(arr, len) {
-  //   let id = '';
-  //   for (let i = 0; i < len; i++) {
-  //     id += arr[i];
-  //   }
-  //   return id;
-  // }
 
   // nodalOfficerExists
   // @param: nodalOfficerId
@@ -66,19 +70,37 @@ class CivilSuppliesNetworkContract extends Contract {
   // properties: nodalOfficerId, district, taluk
   // @params: nodalOfficerId, district, taluk
   async createNodalOfficer(ctx, nodalOfficerId, district, taluk) {
-    const exists = await this.nodalOfficerExists(ctx, nodalOfficerId);
-    if (exists) {
-      throw new Error(`The Nodal Officer ${nodalOfficerId} already exist`);
+    let logger = shim.newLogger('Chaincode --> ');
+    let CID = new shim.ClientIdentity(ctx.stub);
+    let mspID = CID.getMSPID();
+    logger.info('MSPID : ' + mspID);
+
+    if (mspID === 'CommisionerMSP') {
+      const exists = await this.nodalOfficerExists(ctx, nodalOfficerId);
+      if (exists) {
+        throw new Error(`The Nodal Officer ${nodalOfficerId} already exist`);
+      }
+
+      const asset = {
+        district,
+        taluk,
+        dataType: 'Nodal Officer'
+      };
+
+      const buffer = Buffer.from(JSON.stringify(asset));
+      await ctx.stub.putState(nodalOfficerId, buffer);
+      
+      let createNodalOfficerEvent = {
+        Type: 'Creating a nodal officer',
+        NodalOfficerID: nodalOfficerId
+      }
+      await ctx.stub.setEvent('createNodalOfficerEvent', Buffer.from(JSON.stringify(createNodalOfficerEvent)));
+    } else {
+      logger.info('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+      return ('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
     }
-
-    const asset = {
-      district,
-      taluk,
-      dataType: 'Nodal Officer'
-    };
-
-    const buffer = Buffer.from(JSON.stringify(asset));
-    await ctx.stub.putState(nodalOfficerId, buffer);
   }
 
   // readNodalOfficer
@@ -97,30 +119,54 @@ class CivilSuppliesNetworkContract extends Contract {
   // updateNodalOfficer
   // @params: nodalOfficerId, district, taluk
   async updateNodalOfficer(ctx, nodalOfficerId, newDistrict, newTaluk) {
-    const exists = await this.nodalOfficerExists(ctx, nodalOfficerId);
-    if (!exists) {
-      throw new Error(`The Nodal Officer ${nodalOfficerId} does not exist`);
+    let logger = shim.newLogger('Chaincode --> ');
+    let CID = new shim.ClientIdentity(ctx.stub);
+    let mspID = CID.getMSPID();
+    logger.info('MSPID : ' + mspID);
+
+    if (mspID === 'CommisionerMSP') {
+      const exists = await this.nodalOfficerExists(ctx, nodalOfficerId);
+      if (!exists) {
+        throw new Error(`The Nodal Officer ${nodalOfficerId} does not exist`);
+      }
+
+      const asset = {
+        district: newDistrict,
+        taluk: newTaluk,
+        dataType: 'Nodal Officer'
+      };
+
+      const buffer = Buffer.from(JSON.stringify(asset));
+      await ctx.stub.putState(nodalOfficerId, buffer);
+    } else {
+      logger.info('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+      return ('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
     }
-
-    const asset = {
-      district: newDistrict,
-      taluk: newTaluk,
-      dataType: 'Nodal Officer'
-    };
-
-    const buffer = Buffer.from(JSON.stringify(asset));
-    await ctx.stub.putState(nodalOfficerId, buffer);
   }
 
   // deleteNodalOfficer
   // @param: nodalOfficerId
   async deleteNodalOfficer(ctx, nodalOfficerId) {
-    const exists = await this.nodalOfficerExists(ctx, nodalOfficerId);
-    if (!exists) {
-      throw new Error(`The Nodal Officer ${nodalOfficerId} does not exist`);
-    }
+    let logger = shim.newLogger('Chaincode --> ');
+    let CID = new shim.ClientIdentity(ctx.stub);
+    let mspID = CID.getMSPID();
+    logger.info('MSPID : ' + mspID);
 
-    await ctx.stub.deleteState(nodalOfficerId);
+    if (mspID === 'CommisionerMSP') {
+      const exists = await this.nodalOfficerExists(ctx, nodalOfficerId);
+      if (!exists) {
+        throw new Error(`The Nodal Officer ${nodalOfficerId} does not exist`);
+      }
+
+      await ctx.stub.deleteState(nodalOfficerId);
+    } else {
+      logger.info('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+      return ('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+    }
   }
 
   // rationRetailerExists
@@ -140,32 +186,50 @@ class CivilSuppliesNetworkContract extends Contract {
     LSGBody,
     wardNumber
   ) {
-    const exists = await this.rationRetailerExists(ctx, rationRetailerId);
-    if (exists) {
-      throw new Error(`The Ration Retailer ${rationRetailerId} already exist`);
+    let logger = shim.newLogger('Chaincode --> ');
+    let CID = new shim.ClientIdentity(ctx.stub);
+    let mspID = CID.getMSPID();
+    logger.info('MSPID : ' + mspID);
+
+    if (mspID === 'CommisionerMSP') {
+      const exists = await this.rationRetailerExists(ctx, rationRetailerId);
+      if (exists) {
+        throw new Error(`The Ration Retailer ${rationRetailerId} already exist`);
+      }
+
+      const officerExists = await this.nodalOfficerExists(ctx, nodalOfficerId);
+      if (!officerExists) {
+        throw new Error(`The Nodal Officer ${nodalOfficerId} does not exist`);
+      }
+
+      const asset = {
+        nodalOfficerId,
+        LSGBody,
+        wardNumber,
+        yellowCardConsumers: 0,
+        pinkCardConsumers: 0,
+        blueCardConsumers: 0,
+        whiteCardConsumers: 0,
+        electrifiedHomes: 0,
+        nonElectrifiedHomes: 0,
+        yellowCardFamilies: 0,
+        dataType: 'Ration Retailer'
+      };
+
+      const buffer = Buffer.from(JSON.stringify(asset));
+      await ctx.stub.putState(rationRetailerId, buffer);
+
+      let createRationRetailerEvent = {
+        Type: 'Creating a ration retailer',
+        RationRetailerId: rationRetailerId
+      }
+      await ctx.stub.setEvent('createRationRetailerEvent', Buffer.from(JSON.stringify(createRationRetailerEvent)));
+    } else {
+      logger.info('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+      return ('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
     }
-
-    const officerExists = await this.nodalOfficerExists(ctx, nodalOfficerId);
-    if (!officerExists) {
-      throw new Error(`The Nodal Officer ${nodalOfficerId} does not exist`);
-    }
-
-    const asset = {
-      nodalOfficerId,
-      LSGBody,
-      wardNumber,
-      yellowCardConsumers: 0,
-      pinkCardConsumers: 0,
-      blueCardConsumers: 0,
-      whiteCardConsumers: 0,
-      electrifiedHomes: 0,
-      nonElectrifiedHomes: 0,
-      yellowCardFamilies: 0,
-      dataType: 'Ration Retailer'
-    };
-
-    const buffer = Buffer.from(JSON.stringify(asset));
-    await ctx.stub.putState(rationRetailerId, buffer);
   }
 
   // readRationRetailer
@@ -190,34 +254,58 @@ class CivilSuppliesNetworkContract extends Contract {
     newLSGBody,
     newWardNumber
   ) {
-    const exists = await this.rationRetailerExists(ctx, rationRetailerId);
-    if (!exists) {
-      throw new Error(`The Ration Retailer ${rationRetailerId} does not exist`);
+    let logger = shim.newLogger('Chaincode --> ');
+    let CID = new shim.ClientIdentity(ctx.stub);
+    let mspID = CID.getMSPID();
+    logger.info('MSPID : ' + mspID);
+
+    if (mspID === 'CommisionerMSP') {
+      const exists = await this.rationRetailerExists(ctx, rationRetailerId);
+      if (!exists) {
+        throw new Error(`The Ration Retailer ${rationRetailerId} does not exist`);
+      }
+
+      const officerExists = await this.nodalOfficerExists(ctx, newNodalOfficerId);
+      if (!officerExists) {
+        throw new Error(`The Nodal Officer ${newNodalOfficerId} does not exist`);
+      }
+
+      const retailerDetails = await this.readRationRetailer(ctx, rationRetailerId);
+      retailerDetails['nodalOfficerId'] = newNodalOfficerId;
+      retailerDetails['LSGBody'] = newLSGBody;
+      retailerDetails['wardNumber'] = newWardNumber;
+
+      const buffer = Buffer.from(JSON.stringify(retailerDetails));
+      await ctx.stub.putState(rationRetailerId, buffer);
+    } else {
+      logger.info('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+      return ('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
     }
-
-    const officerExists = await this.nodalOfficerExists(ctx, newNodalOfficerId);
-    if (!officerExists) {
-      throw new Error(`The Nodal Officer ${newNodalOfficerId} does not exist`);
-    }
-
-    const retailerDetails = await this.readRationRetailer(ctx, rationRetailerId);
-    retailerDetails['nodalOfficerId'] = newNodalOfficerId;
-    retailerDetails['LSGBody'] = newLSGBody;
-    retailerDetails['wardNumber'] = newWardNumber;
-
-    const buffer = Buffer.from(JSON.stringify(retailerDetails));
-    await ctx.stub.putState(rationRetailerId, buffer);
   }
 
   // deleteRationRetailer
   // @param: rationRetailerId
   async deleteRationRetailer(ctx, rationRetailerId) {
-    const exists = await this.rationRetailerExists(ctx, rationRetailerId);
-    if (!exists) {
-      throw new Error(`The Ration Retailer ${rationRetailerId} does not exist`);
-    }
+    let logger = shim.newLogger('Chaincode --> ');
+    let CID = new shim.ClientIdentity(ctx.stub);
+    let mspID = CID.getMSPID();
+    logger.info('MSPID : ' + mspID);
 
-    await ctx.stub.deleteState(rationRetailerId);
+    if (mspID === 'CommisionerMSP') {
+      const exists = await this.rationRetailerExists(ctx, rationRetailerId);
+      if (!exists) {
+        throw new Error(`The Ration Retailer ${rationRetailerId} does not exist`);
+      }
+
+      await ctx.stub.deleteState(rationRetailerId);
+    } else {
+      logger.info('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+      return ('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+    }
   }
 
   // rationCardExist
@@ -240,52 +328,67 @@ class CivilSuppliesNetworkContract extends Contract {
     isHomeElectrified,
     mobileNumber
   ) {
-    const exists = await this.rationCardExist(ctx, rationCardNumber);
-    if (exists) {
-      throw new Error(`The Ration Card ${rationCardNumber} already exist`);
-    }
+    let logger = shim.newLogger('Chaincode --> ');
+    let CID = new shim.ClientIdentity(ctx.stub);
+    let mspID = CID.getMSPID();
+    logger.info('MSPID : ' + mspID);
 
-    const retailerExists = await this.rationRetailerExists(ctx, rationRetailerId);
-    if (!retailerExists) {
-      throw new Error(`The Ration Retailer ${rationRetailerId} does not exist`);
-    }
+    if (mspID === 'NodalOfficerMSP') {
+      const exists = await this.rationCardExist(ctx, rationCardNumber);
+      if (exists) {
+        throw new Error(`The Ration Card ${rationCardNumber} already exist`);
+      }
 
-    const retailerDetails = await this.readRationRetailer(ctx, rationRetailerId);
-    const officerDetails = await this.readNodalOfficer(ctx, retailerDetails['nodalOfficerId']);
+      const retailerExists = await this.rationRetailerExists(ctx, rationRetailerId);
+      if (!retailerExists) {
+        throw new Error(`The Ration Retailer ${rationRetailerId} does not exist`);
+      }
 
-    const cardType = this.determineRationCardType(0, 0);
+      const retailerDetails = await this.readRationRetailer(ctx, rationRetailerId);
+      const officerDetails = await this.readNodalOfficer(ctx, retailerDetails['nodalOfficerId']);
 
-    if (isHomeElectrified) {
-      retailerDetails['electrifiedHomes']++;
+      const cardType = this.determineRationCardType(0, 0);
+      console.log(typeof isHomeElectrified);
+      let electricity;
+      if (isHomeElectrified === true || isHomeElectrified === 'true') {
+        retailerDetails['electrifiedHomes']++;
+        electricity = true;
+      } else {
+        retailerDetails['nonElectrifiedHomes']++;
+        electricity = false;
+      }
+
+      const rationCard = {
+        nodalOfficerId: retailerDetails['nodalOfficerId'],
+        rationRetailerId,
+        district: officerDetails['district'],
+        taluk: officerDetails['taluk'],
+        LSGBody: retailerDetails['LSGBody'],
+        wardNumber: retailerDetails['wardNumber'],
+        familyHead: null,
+        familyHeadNumber: null,
+        doesFamilyHeadAvailable: false,
+        houseNumber,
+        totalFamilyIncome: 0,
+        totalFamilyMembers: 0,
+        mobileNumber,
+        rationCardType: cardType['type'],
+        rationCardColour: cardType['colour'],
+        isHomeElectrified: electricity,
+        dataType: 'Ration Card'
+      };
+
+      const retailerBuffer = Buffer.from(JSON.stringify(retailerDetails));
+      await ctx.stub.putState(rationRetailerId, retailerBuffer);
+
+      const buffer = Buffer.from(JSON.stringify(rationCard));
+      await ctx.stub.putState(rationCardNumber, buffer);
     } else {
-      retailerDetails['nonElectrifiedHomes']++;
+      logger.info('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+      return ('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
     }
-
-    const rationCard = {
-      nodalOfficerId: retailerDetails['nodalOfficerId'],
-      rationRetailerId,
-      district: officerDetails['district'],
-      taluk: officerDetails['taluk'],
-      LSGBody: retailerDetails['LSGBody'],
-      wardNumber: retailerDetails['wardNumber'],
-      familyHead: null,
-      familyHeadNumber: null,
-      doesFamilyHeadAvailable: false,
-      houseNumber,
-      totalFamilyIncome: 0,
-      totalFamilyMembers: 0,
-      mobileNumber,
-      rationCardType: cardType['type'],
-      rationCardColour: cardType['colour'],
-      isHomeElectrified,
-      dataType: 'Ration Card'
-    };
-
-    const retailerBuffer = Buffer.from(JSON.stringify(retailerDetails));
-    await ctx.stub.putState(rationRetailerId, retailerBuffer);
-
-    const buffer = Buffer.from(JSON.stringify(rationCard));
-    await ctx.stub.putState(rationCardNumber, buffer);
   }
 
   // readRationCard
@@ -304,71 +407,102 @@ class CivilSuppliesNetworkContract extends Contract {
   // deleteRationCard
   // @param: rationCardNumber
   async deleteRationCard(ctx, rationCardNumber) {
-    const exists = await this.rationCardExist(ctx, rationCardNumber);
-    if (!exists) {
-      throw new Error(`The Ration Card ${rationCardNumber} does not exist`);
-    }
+    let logger = shim.newLogger('Chaincode --> ');
+    let CID = new shim.ClientIdentity(ctx.stub);
+    let mspID = CID.getMSPID();
+    logger.info('MSPID : ' + mspID);
 
-    const rationCardDetails = await this.readRationCard(ctx, rationCardNumber);
-    const retailerDetails = await this.readRationRetailer(ctx, rationCardDetails['rationRetailerId']);
+    if (mspID === 'NodalOfficerMSP') {
+      const exists = await this.rationCardExist(ctx, rationCardNumber);
+      if (!exists) {
+        throw new Error(`The Ration Card ${rationCardNumber} does not exist`);
+      }
 
-    switch (rationCardDetails['rationCardColour']) {
-      case 'Yellow':
-        retailerDetails['yellowCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
-        retailerDetails['yellowCardFamilies']--;
-        break;
-      case 'Pink':
-        retailerDetails['pinkCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
-        break;
-      case 'Blue':
-        retailerDetails['blueCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
-        break;
-      case 'White':
-        retailerDetails['whiteCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
-        break;
-      default:
-        break;
-    }
+      const rationCardDetails = await this.readRationCard(ctx, rationCardNumber);
+      const retailerDetails = await this.readRationRetailer(ctx, rationCardDetails['rationRetailerId']);
 
-    if (rationCardDetails['isHomeElectrified']) {
-      retailerDetails['electrifiedHomes']--;
+      switch (rationCardDetails['rationCardColour']) {
+        case 'Yellow':
+          retailerDetails['yellowCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
+          retailerDetails['yellowCardFamilies']--;
+          break;
+        case 'Pink':
+          retailerDetails['pinkCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
+          break;
+        case 'Blue':
+          retailerDetails['blueCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
+          break;
+        case 'White':
+          retailerDetails['whiteCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
+          break;
+        default:
+          break;
+      }
+
+      if (rationCardDetails['isHomeElectrified']) {
+        retailerDetails['electrifiedHomes']--;
+      } else {
+        retailerDetails['nonElectrifiedHomes']--;
+      }
+
+      const retailerBuffer = Buffer.from(JSON.stringify(retailerDetails));
+      await ctx.stub.putState(rationCardDetails['rationRetailerId'], retailerBuffer);
+
+      await ctx.stub.deleteState(rationCardNumber);
     } else {
-      retailerDetails['nonElectrifiedHomes']--;
+      logger.info('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+      return ('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
     }
-
-    const retailerBuffer = Buffer.from(JSON.stringify(retailerDetails));
-    await ctx.stub.putState(rationCardDetails['rationRetailerId'], retailerBuffer);
-
-    await ctx.stub.deleteState(rationCardNumber);
   }
 
   // shiftHouseInSameWard
   // @params: rationCardNumber, newHouseNumber, isNewHomeElectrified
   async shiftHouseInSameWard(ctx, rationCardNumber, newHouseNumber, isNewHomeElectrified) {
-    const exists = await this.rationCardExist(ctx, rationCardNumber);
-    if (!exists) {
-      throw new Error(`The Ration Card ${rationCardNumber} does not exist`);
+    let logger = shim.newLogger('Chaincode --> ');
+    let CID = new shim.ClientIdentity(ctx.stub);
+    let mspID = CID.getMSPID();
+    logger.info('MSPID : ' + mspID);
+
+    if (mspID === 'NodalOfficerMSP') {
+      const exists = await this.rationCardExist(ctx, rationCardNumber);
+      if (!exists) {
+        throw new Error(`The Ration Card ${rationCardNumber} does not exist`);
+      }
+
+      const rationCardDetails = await this.readRationCard(ctx, rationCardNumber);
+      const retailerDetails = await this.readRationRetailer(ctx, rationCardDetails['rationRetailerId']);
+
+      let electricity;
+      if (isNewHomeElectrified === true || isNewHomeElectrified === 'true') {
+        electricity = true;
+      } else {
+        electricity = false;
+      }
+
+      if (rationCardDetails['isHomeElectrified'] && !electricity) {
+        retailerDetails['electrifiedHomes']--;
+        retailerDetails['nonElectrifiedHomes']++;
+      } else if (!rationCardDetails['isHomeElectrified'] && electricity) {
+        retailerDetails['electrifiedHomes']++;
+        retailerDetails['nonElectrifiedHomes']--;
+      }
+
+      rationCardDetails['houseNumber'] = newHouseNumber;
+      rationCardDetails['isHomeElectrified'] = electricity;
+
+      const retailerBuffer = Buffer.from(JSON.stringify(retailerDetails));
+      await ctx.stub.putState(rationCardDetails['rationRetailerId'], retailerBuffer);
+
+      const buffer = Buffer.from(JSON.stringify(rationCardDetails));
+      await ctx.stub.putState(rationCardNumber, buffer);
+    } else {
+      logger.info('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+      return ('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
     }
-
-    const rationCardDetails = await this.readRationCard(ctx, rationCardNumber);
-    const retailerDetails = await this.readRationRetailer(ctx, rationCardDetails['rationRetailerId']);
-
-    if (rationCardDetails['isHomeElectrified'] && !isNewHomeElectrified) {
-      retailerDetails['electrifiedHomes']--;
-      retailerDetails['nonElectrifiedHomes']++;
-    } else if (!rationCardDetails['isHomeElectrified'] && isNewHomeElectrified) {
-      retailerDetails['electrifiedHomes']++;
-      retailerDetails['nonElectrifiedHomes']--;
-    }
-
-    rationCardDetails['houseNumber'] = newHouseNumber;
-    rationCardDetails['isHomeElectrified'] = isNewHomeElectrified;
-
-    const retailerBuffer = Buffer.from(JSON.stringify(retailerDetails));
-    await ctx.stub.putState(rationCardDetails['rationRetailerId'], retailerBuffer);
-
-    const buffer = Buffer.from(JSON.stringify(rationCardDetails));
-    await ctx.stub.putState(rationCardNumber, buffer);
   }
 
   // shiftHouseInSameLSGBody
@@ -380,71 +514,95 @@ class CivilSuppliesNetworkContract extends Contract {
     newRationRetailerId,
     isNewHomeElectrified
   ) {
-    const exists = await this.rationCardExist(ctx, rationCardNumber);
-    if (!exists) {
-      throw new Error(`The Ration Card ${rationCardNumber} does not exist`);
+    let logger = shim.newLogger('Chaincode --> ');
+    let CID = new shim.ClientIdentity(ctx.stub);
+    let mspID = CID.getMSPID();
+    logger.info('MSPID : ' + mspID);
+
+    if (mspID === 'NodalOfficerMSP') {
+      const exists = await this.rationCardExist(ctx, rationCardNumber);
+      if (!exists) {
+        throw new Error(`The Ration Card ${rationCardNumber} does not exist`);
+      }
+
+      const retailerExists = await this.rationRetailerExists(ctx, newRationRetailerId);
+      if (!retailerExists) {
+        throw new Error(`The Ration Retailer ${newRationRetailerId} does not exist`);
+      }
+
+      const rationCardDetails = await this.readRationCard(ctx, rationCardNumber);
+      const currentRetailerId = rationCardDetails['rationRetailerId'];
+
+      if (currentRetailerId === newRationRetailerId) {
+        throw new Error(`The new Ration Retailer ${newRationRetailerId} is same as the current one.`);
+      }
+
+      const currentRetailerDetails = await this.readRationRetailer(ctx, currentRetailerId);
+      const newRetailerDetails = await this.readRationRetailer(ctx, newRationRetailerId);
+
+      switch (rationCardDetails['rationCardColour']) {
+        case 'Yellow':
+          currentRetailerDetails['yellowCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
+          currentRetailerDetails['yellowCardFamilies']--;
+          newRetailerDetails['yellowCardConsumers'] += rationCardDetails['totalFamilyMembers'];
+          newRetailerDetails['yellowCardFamilies']++;
+          break;
+        case 'Pink':
+          currentRetailerDetails['pinkCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
+          newRetailerDetails['pinkCardConsumers'] += rationCardDetails['totalFamilyMembers'];
+          break;
+        case 'Blue':
+          currentRetailerDetails['blueCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
+          newRetailerDetails['blueCardConsumers'] += rationCardDetails['totalFamilyMembers'];
+          break;
+        case 'White':
+          currentRetailerDetails['whiteCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
+          newRetailerDetails['whiteCardConsumers'] += rationCardDetails['totalFamilyMembers'];
+          break;
+        default:
+          break;
+      }
+
+      let electricity;
+      if (isNewHomeElectrified === true || isNewHomeElectrified === 'true') {
+        electricity = true;
+      } else {
+        electricity = false;
+      }
+
+      if (rationCardDetails['isHomeElectrified'] && !electricity) {
+        currentRetailerDetails['electrifiedHomes']--;
+        newRetailerDetails['nonElectrifiedHomes']++;
+      } else if (!rationCardDetails['isHomeElectrified'] && electricity) {
+        newRetailerDetails['electrifiedHomes']++;
+        currentRetailerDetails['nonElectrifiedHomes']--;
+      } else if (!rationCardDetails['isHomeElectrified'] && !electricity) {
+        newRetailerDetails['nonElectrifiedHomes']++;
+        currentRetailerDetails['nonElectrifiedHomes']--;
+      } else if (rationCardDetails['isHomeElectrified'] && electricity) {
+        newRetailerDetails['electrifiedHomes']++;
+        currentRetailerDetails['electrifiedHomes']--;
+      }
+
+      rationCardDetails['houseNumber'] = newHouseNumber;
+      rationCardDetails['wardNumber'] = newRetailerDetails['wardNumber'];
+      rationCardDetails['rationRetailerId'] = newRationRetailerId;
+      rationCardDetails['isHomeElectrified'] = electricity;
+
+      const currentRetailerBuffer = Buffer.from(JSON.stringify(currentRetailerDetails));
+      await ctx.stub.putState(currentRetailerId, currentRetailerBuffer);
+
+      const newRetailerBuffer = Buffer.from(JSON.stringify(newRetailerDetails));
+      await ctx.stub.putState(newRationRetailerId, newRetailerBuffer);
+
+      const buffer = Buffer.from(JSON.stringify(rationCardDetails));
+      await ctx.stub.putState(rationCardNumber, buffer);
+    } else {
+      logger.info('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+      return ('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
     }
-
-    const retailerExists = await this.rationRetailerExists(ctx, newRationRetailerId);
-    if (!retailerExists) {
-      throw new Error(`The Ration Retailer ${newRationRetailerId} does not exist`);
-    }
-
-    const rationCardDetails = await this.readRationCard(ctx, rationCardNumber);
-    const currentRetailerId = rationCardDetails['rationRetailerId'];
-    const currentRetailerDetails = await this.readRationRetailer(ctx, currentRetailerId);
-    const newRetailerDetails = await this.readRationRetailer(ctx, newRationRetailerId);
-
-    switch (rationCardDetails['rationCardColour']) {
-      case 'Yellow':
-        currentRetailerDetails['yellowCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
-        currentRetailerDetails['yellowCardFamilies']--;
-        newRetailerDetails['yellowCardConsumers'] += rationCardDetails['totalFamilyMembers'];
-        newRetailerDetails['yellowCardFamilies']++;
-        break;
-      case 'Pink':
-        currentRetailerDetails['pinkCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
-        newRetailerDetails['pinkCardConsumers'] += rationCardDetails['totalFamilyMembers'];
-        break;
-      case 'Blue':
-        currentRetailerDetails['blueCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
-        newRetailerDetails['blueCardConsumers'] += rationCardDetails['totalFamilyMembers'];
-        break;
-      case 'White':
-        currentRetailerDetails['whiteCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
-        newRetailerDetails['whiteCardConsumers'] += rationCardDetails['totalFamilyMembers'];
-        break;
-      default:
-        break;
-    }
-
-    if (rationCardDetails['isHomeElectrified'] && !isNewHomeElectrified) {
-      currentRetailerDetails['electrifiedHomes']--;
-      newRetailerDetails['nonElectrifiedHomes']++;
-    } else if (!rationCardDetails['isHomeElectrified'] && isNewHomeElectrified) {
-      newRetailerDetails['electrifiedHomes']++;
-      currentRetailerDetails['nonElectrifiedHomes']--;
-    } else if (!rationCardDetails['isHomeElectrified'] && !isNewHomeElectrified) {
-      newRetailerDetails['nonElectrifiedHomes']++;
-      currentRetailerDetails['nonElectrifiedHomes']--;
-    } else if (rationCardDetails['isHomeElectrified'] && isNewHomeElectrified) {
-      newRetailerDetails['electrifiedHomes']++;
-      currentRetailerDetails['electrifiedHomes']--;
-    }
-
-    rationCardDetails['houseNumber'] = newHouseNumber;
-    rationCardDetails['wardNumber'] = newRetailerDetails['wardNumber'];
-    rationCardDetails['rationRetailerId'] = newRationRetailerId;
-    rationCardDetails['isHomeElectrified'] = isNewHomeElectrified;
-
-    const currentRetailerBuffer = Buffer.from(JSON.stringify(currentRetailerDetails));
-    await ctx.stub.putState(currentRetailerId, currentRetailerBuffer);
-
-    const newRetailerBuffer = Buffer.from(JSON.stringify(newRetailerDetails));
-    await ctx.stub.putState(newRationRetailerId, newRetailerBuffer);
-
-    const buffer = Buffer.from(JSON.stringify(rationCardDetails));
-    await ctx.stub.putState(rationCardNumber, buffer);
   }
 
   // shiftHouseInSameTaluk
@@ -456,72 +614,96 @@ class CivilSuppliesNetworkContract extends Contract {
     newRationRetailerId,
     isNewHomeElectrified
   ) {
-    const exists = await this.rationCardExist(ctx, rationCardNumber);
-    if (!exists) {
-      throw new Error(`The Ration Card ${rationCardNumber} does not exist`);
+    let logger = shim.newLogger('Chaincode --> ');
+    let CID = new shim.ClientIdentity(ctx.stub);
+    let mspID = CID.getMSPID();
+    logger.info('MSPID : ' + mspID);
+
+    if (mspID === 'NodalOfficerMSP') {
+      const exists = await this.rationCardExist(ctx, rationCardNumber);
+      if (!exists) {
+        throw new Error(`The Ration Card ${rationCardNumber} does not exist`);
+      }
+
+      const retailerExists = await this.rationRetailerExists(ctx, newRationRetailerId);
+      if (!retailerExists) {
+        throw new Error(`The Ration Retailer ${newRationRetailerId} does not exist`);
+      }
+
+      const rationCardDetails = await this.readRationCard(ctx, rationCardNumber);
+      const currentRetailerId = rationCardDetails['rationRetailerId'];
+
+      if (currentRetailerId === newRationRetailerId) {
+        throw new Error(`The new Ration Retailer ${newRationRetailerId} is same as the current one.`);
+      }
+
+      const currentRetailerDetails = await this.readRationRetailer(ctx, currentRetailerId)
+      const newRetailerDetails = await this.readRationRetailer(ctx, newRationRetailerId);
+
+      switch (rationCardDetails['rationCardColour']) {
+        case 'Yellow':
+          currentRetailerDetails['yellowCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
+          currentRetailerDetails['yellowCardFamilies']--;
+          newRetailerDetails['yellowCardConsumers'] += rationCardDetails['totalFamilyMembers'];
+          newRetailerDetails['yellowCardFamilies']++;
+          break;
+        case 'Pink':
+          currentRetailerDetails['pinkCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
+          newRetailerDetails['pinkCardConsumers'] += rationCardDetails['totalFamilyMembers'];
+          break;
+        case 'Blue':
+          currentRetailerDetails['blueCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
+          newRetailerDetails['blueCardConsumers'] += rationCardDetails['totalFamilyMembers'];
+          break;
+        case 'White':
+          currentRetailerDetails['whiteCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
+          newRetailerDetails['whiteCardConsumers'] += rationCardDetails['totalFamilyMembers'];
+          break;
+        default:
+          break;
+      }
+
+      let electricity;
+      if (isNewHomeElectrified === true || isNewHomeElectrified === 'true') {
+        electricity = true;
+      } else {
+        electricity = false;
+      }
+
+      if (rationCardDetails['isHomeElectrified'] && !electricity) {
+        currentRetailerDetails['electrifiedHomes']--;
+        newRetailerDetails['nonElectrifiedHomes']++;
+      } else if (!rationCardDetails['isHomeElectrified'] && electricity) {
+        newRetailerDetails['electrifiedHomes']++;
+        currentRetailerDetails['nonElectrifiedHomes']--;
+      } else if (!rationCardDetails['isHomeElectrified'] && !electricity) {
+        newRetailerDetails['nonElectrifiedHomes']++;
+        currentRetailerDetails['nonElectrifiedHomes']--;
+      } else if (rationCardDetails['isHomeElectrified'] && electricity) {
+        newRetailerDetails['electrifiedHomes']++;
+        currentRetailerDetails['electrifiedHomes']--;
+      }
+
+      rationCardDetails['houseNumber'] = newHouseNumber;
+      rationCardDetails['wardNumber'] = newRetailerDetails['wardNumber'];
+      rationCardDetails['LSGBody'] = newRetailerDetails['LSGBody'];
+      rationCardDetails['rationRetailerId'] = newRationRetailerId;
+      rationCardDetails['isHomeElectrified'] = electricity;
+
+      const currentRetailerBuffer = Buffer.from(JSON.stringify(currentRetailerDetails));
+      await ctx.stub.putState(currentRetailerId, currentRetailerBuffer);
+
+      const newRetailerBuffer = Buffer.from(JSON.stringify(newRetailerDetails));
+      await ctx.stub.putState(newRationRetailerId, newRetailerBuffer);
+
+      const buffer = Buffer.from(JSON.stringify(rationCardDetails));
+      await ctx.stub.putState(rationCardNumber, buffer);
+    } else {
+      logger.info('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+      return ('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
     }
-
-    const retailerExists = await this.rationRetailerExists(ctx, newRationRetailerId);
-    if (!retailerExists) {
-      throw new Error(`The Ration Retailer ${newRationRetailerId} does not exist`);
-    }
-
-    const rationCardDetails = await this.readRationCard(ctx, rationCardNumber);
-    const currentRetailerId = rationCardDetails['rationRetailerId'];
-    const currentRetailerDetails = await this.readRationRetailer(ctx, currentRetailerId)
-    const newRetailerDetails = await this.readRationRetailer(ctx, newRationRetailerId);
-
-    switch (rationCardDetails['rationCardColour']) {
-      case 'Yellow':
-        currentRetailerDetails['yellowCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
-        currentRetailerDetails['yellowCardFamilies']--;
-        newRetailerDetails['yellowCardConsumers'] += rationCardDetails['totalFamilyMembers'];
-        newRetailerDetails['yellowCardFamilies']++;
-        break;
-      case 'Pink':
-        currentRetailerDetails['pinkCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
-        newRetailerDetails['pinkCardConsumers'] += rationCardDetails['totalFamilyMembers'];
-        break;
-      case 'Blue':
-        currentRetailerDetails['blueCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
-        newRetailerDetails['blueCardConsumers'] += rationCardDetails['totalFamilyMembers'];
-        break;
-      case 'White':
-        currentRetailerDetails['whiteCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
-        newRetailerDetails['whiteCardConsumers'] += rationCardDetails['totalFamilyMembers'];
-        break;
-      default:
-        break;
-    }
-
-    if (rationCardDetails['isHomeElectrified'] && !isNewHomeElectrified) {
-      currentRetailerDetails['electrifiedHomes']--;
-      newRetailerDetails['nonElectrifiedHomes']++;
-    } else if (!rationCardDetails['isHomeElectrified'] && isNewHomeElectrified) {
-      newRetailerDetails['electrifiedHomes']++;
-      currentRetailerDetails['nonElectrifiedHomes']--;
-    } else if (!rationCardDetails['isHomeElectrified'] && !isNewHomeElectrified) {
-      newRetailerDetails['nonElectrifiedHomes']++;
-      currentRetailerDetails['nonElectrifiedHomes']--;
-    } else if (rationCardDetails['isHomeElectrified'] && isNewHomeElectrified) {
-      newRetailerDetails['electrifiedHomes']++;
-      currentRetailerDetails['electrifiedHomes']--;
-    }
-
-    rationCardDetails['houseNumber'] = newHouseNumber;
-    rationCardDetails['wardNumber'] = newRetailerDetails['wardNumber'];
-    rationCardDetails['LSGBody'] = newRetailerDetails['LSGBody'];
-    rationCardDetails['rationRetailerId'] = newRationRetailerId;
-    rationCardDetails['isHomeElectrified'] = isNewHomeElectrified;
-
-    const currentRetailerBuffer = Buffer.from(JSON.stringify(currentRetailerDetails));
-    await ctx.stub.putState(currentRetailerId, currentRetailerBuffer);
-
-    const newRetailerBuffer = Buffer.from(JSON.stringify(newRetailerDetails));
-    await ctx.stub.putState(newRationRetailerId, newRetailerBuffer);
-
-    const buffer = Buffer.from(JSON.stringify(rationCardDetails));
-    await ctx.stub.putState(rationCardNumber, buffer);
   }
 
   // shiftHouseToAnotherTaluk
@@ -533,142 +715,182 @@ class CivilSuppliesNetworkContract extends Contract {
     newRationRetailerId,
     isNewHomeElectrified
   ) {
-    const exists = await this.rationCardExist(ctx, rationCardNumber);
-    if (!exists) {
-      throw new Error(`The Ration Card ${rationCardNumber} does not exist`);
+    let logger = shim.newLogger('Chaincode --> ');
+    let CID = new shim.ClientIdentity(ctx.stub);
+    let mspID = CID.getMSPID();
+    logger.info('MSPID : ' + mspID);
+
+    if (mspID === 'CommisionerMSP') {
+      const exists = await this.rationCardExist(ctx, rationCardNumber);
+      if (!exists) {
+        throw new Error(`The Ration Card ${rationCardNumber} does not exist`);
+      }
+
+      const retailerExists = await this.rationRetailerExists(ctx, newRationRetailerId);
+      if (!retailerExists) {
+        throw new Error(`The Ration Retailer ${newRationRetailerId} does not exist`);
+      }
+
+      const rationCardDetails = await this.readRationCard(ctx, rationCardNumber);
+      const currentRetailerId = rationCardDetails['rationRetailerId'];
+      const currentOfficerId = rationCardDetails['nodalOfficerId']
+
+      if (currentRetailerId === newRationRetailerId) {
+        throw new Error(`The new Ration Retailer ${newRationRetailerId} is same as the current one.`);
+      }
+
+      const currentRetailerDetails = await this.readRationRetailer(ctx, currentRetailerId)
+      const newRetailerDetails = await this.readRationRetailer(ctx, newRationRetailerId);
+
+      if (currentOfficerId === newRetailerDetails['nodalOfficerId']) {
+        throw new Error(`The new Nodal Officer ${newRetailerDetails['nodalOfficerId']} is same as the current one.`);
+      }
+
+      const officerDetails = await this.readNodalOfficer(ctx, newRetailerDetails['nodalOfficerId']);
+
+      switch (rationCardDetails['rationCardColour']) {
+        case 'Yellow':
+          currentRetailerDetails['yellowCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
+          currentRetailerDetails['yellowCardFamilies']--;
+          newRetailerDetails['yellowCardConsumers'] += rationCardDetails['totalFamilyMembers'];
+          newRetailerDetails['yellowCardFamilies']++;
+          break;
+        case 'Pink':
+          currentRetailerDetails['pinkCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
+          newRetailerDetails['pinkCardConsumers'] += rationCardDetails['totalFamilyMembers'];
+          break;
+        case 'Blue':
+          currentRetailerDetails['blueCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
+          newRetailerDetails['blueCardConsumers'] += rationCardDetails['totalFamilyMembers'];
+          break;
+        case 'White':
+          currentRetailerDetails['whiteCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
+          newRetailerDetails['whiteCardConsumers'] += rationCardDetails['totalFamilyMembers'];
+          break;
+        default:
+          break;
+      }
+
+      let electricity;
+      if (isNewHomeElectrified === true || isNewHomeElectrified === 'true') {
+        electricity = true;
+      } else {
+        electricity = false;
+      }
+
+      if (rationCardDetails['isHomeElectrified'] && !electricity) {
+        currentRetailerDetails['electrifiedHomes']--;
+        newRetailerDetails['nonElectrifiedHomes']++;
+      } else if (!rationCardDetails['isHomeElectrified'] && electricity) {
+        newRetailerDetails['electrifiedHomes']++;
+        currentRetailerDetails['nonElectrifiedHomes']--;
+      } else if (!rationCardDetails['isHomeElectrified'] && !electricity) {
+        newRetailerDetails['nonElectrifiedHomes']++;
+        currentRetailerDetails['nonElectrifiedHomes']--;
+      } else if (rationCardDetails['isHomeElectrified'] && electricity) {
+        newRetailerDetails['electrifiedHomes']++;
+        currentRetailerDetails['electrifiedHomes']--;
+      }
+
+      rationCardDetails['houseNumber'] = newHouseNumber;
+      rationCardDetails['district'] = officerDetails['district'];
+      rationCardDetails['taluk'] = officerDetails['taluk'];
+      rationCardDetails['wardNumber'] = newRetailerDetails['wardNumber'];
+      rationCardDetails['LSGBody'] = newRetailerDetails['LSGBody'];
+      rationCardDetails['nodalOfficerId'] = newRetailerDetails['nodalOfficerId'];
+      rationCardDetails['rationRetailerId'] = newRationRetailerId;
+      rationCardDetails['isHomeElectrified'] = electricity;
+
+      const currentRetailerBuffer = Buffer.from(JSON.stringify(currentRetailerDetails));
+      await ctx.stub.putState(currentRetailerId, currentRetailerBuffer);
+
+      const newRetailerBuffer = Buffer.from(JSON.stringify(newRetailerDetails));
+      await ctx.stub.putState(newRationRetailerId, newRetailerBuffer);
+
+
+      const buffer = Buffer.from(JSON.stringify(rationCardDetails));
+      await ctx.stub.putState(rationCardNumber, buffer);
+
+      let shiftFamilyToAnotherTalukEvent = {
+        Type: 'Shifting one family from one taluk to another',
+        RationCardNumber: rationCardNumber
+      }
+      await ctx.stub.setEvent('shiftFamilyToAnotherTalukEvent', Buffer.from(JSON.stringify(shiftFamilyToAnotherTalukEvent)));
+    } else {
+      logger.info('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+      return ('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
     }
-
-    const retailerExists = await this.rationRetailerExists(ctx, newRationRetailerId);
-    if (!retailerExists) {
-      throw new Error(`The Ration Retailer ${newRationRetailerId} does not exist`);
-    }
-
-    const rationCardDetails = await this.readRationCard(ctx, rationCardNumber);
-    const currentRetailerId = rationCardDetails['rationRetailerId'];
-    const currentRetailerDetails = await this.readRationRetailer(ctx, currentRetailerId)
-    const newRetailerDetails = await this.readRationRetailer(ctx, newRationRetailerId);
-    const officerDetails = await this.readNodalOfficer(ctx, newRetailerDetails['nodalOfficerId']);
-
-    switch (rationCardDetails['rationCardColour']) {
-      case 'Yellow':
-        currentRetailerDetails['yellowCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
-        currentRetailerDetails['yellowCardFamilies']--;
-        newRetailerDetails['yellowCardConsumers'] += rationCardDetails['totalFamilyMembers'];
-        newRetailerDetails['yellowCardFamilies']++;
-        break;
-      case 'Pink':
-        currentRetailerDetails['pinkCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
-        newRetailerDetails['pinkCardConsumers'] += rationCardDetails['totalFamilyMembers'];
-        break;
-      case 'Blue':
-        currentRetailerDetails['blueCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
-        newRetailerDetails['blueCardConsumers'] += rationCardDetails['totalFamilyMembers'];
-        break;
-      case 'White':
-        currentRetailerDetails['whiteCardConsumers'] -= rationCardDetails['totalFamilyMembers'];
-        newRetailerDetails['whiteCardConsumers'] += rationCardDetails['totalFamilyMembers'];
-        break;
-      default:
-        break;
-    }
-
-    if (rationCardDetails['isHomeElectrified'] && !isNewHomeElectrified) {
-      currentRetailerDetails['electrifiedHomes']--;
-      newRetailerDetails['nonElectrifiedHomes']++;
-    } else if (!rationCardDetails['isHomeElectrified'] && isNewHomeElectrified) {
-      newRetailerDetails['electrifiedHomes']++;
-      currentRetailerDetails['nonElectrifiedHomes']--;
-    } else if (!rationCardDetails['isHomeElectrified'] && !isNewHomeElectrified) {
-      newRetailerDetails['nonElectrifiedHomes']++;
-      currentRetailerDetails['nonElectrifiedHomes']--;
-    } else if (rationCardDetails['isHomeElectrified'] && isNewHomeElectrified) {
-      newRetailerDetails['electrifiedHomes']++;
-      currentRetailerDetails['electrifiedHomes']--;
-    }
-
-    rationCardDetails['houseNumber'] = newHouseNumber;
-    rationCardDetails['district'] = officerDetails['district'];
-    rationCardDetails['taluk'] = officerDetails['taluk'];
-    rationCardDetails['wardNumber'] = newRetailerDetails['wardNumber'];
-    rationCardDetails['LSGBody'] = newRetailerDetails['LSGBody'];
-    rationCardDetails['nodalOfficerId'] = newRetailerDetails['nodalOfficerId'];
-    rationCardDetails['rationRetailerId'] = newRationRetailerId;
-    rationCardDetails['isHomeElectrified'] = isNewHomeElectrified;
-
-    const currentRetailerBuffer = Buffer.from(JSON.stringify(currentRetailerDetails));
-    await ctx.stub.putState(currentRetailerId, currentRetailerBuffer);
-
-    const newRetailerBuffer = Buffer.from(JSON.stringify(newRetailerDetails));
-    await ctx.stub.putState(newRationRetailerId, newRetailerBuffer);
-
-
-    const buffer = Buffer.from(JSON.stringify(rationCardDetails));
-    await ctx.stub.putState(rationCardNumber, buffer);
   }
 
   // changeMobileNumber
   // @params: rationCardNumber, newMobileNumber
   async changeMobileNumber(ctx, rationCardNumber, newMobileNumber) {
-    const exists = await this.rationCardExist(ctx, rationCardNumber);
-    if (!exists) {
-      throw new Error(`The Ration Card ${rationCardNumber} does not exist`);
+    let logger = shim.newLogger('Chaincode --> ');
+    let CID = new shim.ClientIdentity(ctx.stub);
+    let mspID = CID.getMSPID();
+    logger.info('MSPID : ' + mspID);
+
+    if (mspID === 'NodalOfficerMSP') {
+      const exists = await this.rationCardExist(ctx, rationCardNumber);
+      if (!exists) {
+        throw new Error(`The Ration Card ${rationCardNumber} does not exist`);
+      }
+
+      const rationCardDetails = await this.readRationCard(ctx, rationCardNumber);
+
+      rationCardDetails['mobileNumber'] = newMobileNumber;
+
+      const buffer = Buffer.from(JSON.stringify(rationCardDetails));
+      await ctx.stub.putState(rationCardNumber, buffer);
+    } else {
+      logger.info('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+      return ('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
     }
-
-    const rationCardDetails = await this.readRationCard(ctx, rationCardNumber);
-
-    rationCardDetails['mobileNumber'] = newMobileNumber;
-
-    const buffer = Buffer.from(JSON.stringify(rationCardDetails));
-    await ctx.stub.putState(rationCardNumber, buffer);
   }
 
   // changeHomeElectrificationStatus
   // @params: rationCardNumber
   async changeHomeElectrificationStatus(ctx, rationCardNumber) {
-    const exists = await this.rationCardExist(ctx, rationCardNumber);
-    if (!exists) {
-      throw new Error(`The Ration Card ${rationCardNumber} does not exist`);
-    }
+    let logger = shim.newLogger('Chaincode --> ');
+    let CID = new shim.ClientIdentity(ctx.stub);
+    let mspID = CID.getMSPID();
+    logger.info('MSPID : ' + mspID);
 
-    const rationCardDetails = await this.readRationCard(ctx, rationCardNumber);
-    const retailerDetails = await this.readRationRetailer(ctx, rationCardDetails['rationRetailerId'])
+    if (mspID === 'NodalOfficerMSP') {
+      const exists = await this.rationCardExist(ctx, rationCardNumber);
+      if (!exists) {
+        throw new Error(`The Ration Card ${rationCardNumber} does not exist`);
+      }
 
-    if (rationCardDetails['isHomeElectrified']) {
-      rationCardDetails['isHomeElectrified'] = false;
-      retailerDetails['nonElectrifiedHomes']++;
-      retailerDetails['electrifiedHomes']--;
+      const rationCardDetails = await this.readRationCard(ctx, rationCardNumber);
+      const retailerDetails = await this.readRationRetailer(ctx, rationCardDetails['rationRetailerId'])
+
+      if (rationCardDetails['isHomeElectrified']) {
+        rationCardDetails['isHomeElectrified'] = false;
+        retailerDetails['nonElectrifiedHomes']++;
+        retailerDetails['electrifiedHomes']--;
+      } else {
+        rationCardDetails['isHomeElectrified'] = true;
+        retailerDetails['nonElectrifiedHomes']--;
+        retailerDetails['electrifiedHomes']++;
+      }
+
+      const retailerBuffer = Buffer.from(JSON.stringify(retailerDetails));
+      await ctx.stub.putState(rationCardDetails['rationRetailerId'], retailerBuffer);
+
+      const buffer = Buffer.from(JSON.stringify(rationCardDetails));
+      await ctx.stub.putState(rationCardNumber, buffer);
     } else {
-      rationCardDetails['isHomeElectrified'] = true;
-      retailerDetails['nonElectrifiedHomes']--;
-      retailerDetails['electrifiedHomes']++;
+      logger.info('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+      return ('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
     }
-
-    const retailerBuffer = Buffer.from(JSON.stringify(retailerDetails));
-    await ctx.stub.putState(rationCardDetails['rationRetailerId'], retailerBuffer);
-
-    const buffer = Buffer.from(JSON.stringify(rationCardDetails));
-    await ctx.stub.putState(rationCardNumber, buffer);
   }
-
-  // changeIncome
-  // @params: rationCardNumber, newIncome
-  // async changeIncome(ctx, rationCardNumber, newIncome) {
-  //   const exists = await this.rationCardExist(ctx, rationCardNumber);
-  //   if (!exists) {
-  //     throw new Error(`The Ration Card ${rationCardNumber} does not exist`);
-  //   }
-
-  //   const rationCardDetails = await this.readRationCard(ctx, rationCardNumber);
-
-  //   const cardType = this.determineRationCardType(newIncome);
-
-  //   rationCardDetails['income'] = newIncome;
-  //   rationCardDetails['rationCardType'] = cardType['type'];
-  //   rationCardDetails['rationCardColour'] = cardType['colour']
-
-  //   const buffer = Buffer.from(JSON.stringify(rationCardDetails));
-  //   await ctx.stub.putState(rationCardNumber, buffer);
-  // }
 
   // consumerExist
   // @param: consumerNumber
@@ -688,123 +910,190 @@ class CivilSuppliesNetworkContract extends Contract {
     sex,
     occupation,
     individualIncome,
-    isFamilyHead
   ) {
-    const exists = await this.consumerExist(ctx, consumerNumber);
-    if (exists) {
-      throw new Error(`The Consumer ${consumerNumber} already exist`);
-    }
+    let logger = shim.newLogger('Chaincode --> ');
+    let CID = new shim.ClientIdentity(ctx.stub);
+    let mspID = CID.getMSPID();
+    logger.info('MSPID : ' + mspID);
 
-    const cardExists = await this.rationCardExist(ctx, rationCardNumber);
-    if (!cardExists) {
-      throw new Error(`The Ration Card ${rationCardNumber} does not exist`);
-    }
+    if (mspID === 'NodalOfficerMSP') {
+      const exists = await this.consumerExist(ctx, consumerNumber);
+      if (exists) {
+        throw new Error(`The Consumer ${consumerNumber} already exist`);
+      }
 
-    const rationCardDetails = await this.readRationCard(ctx, rationCardNumber);
-    const retailerDetails = await this.readRationRetailer(ctx, rationCardDetails['rationRetailerId'])
+      const cardExists = await this.rationCardExist(ctx, rationCardNumber);
+      if (!cardExists) {
+        throw new Error(`The Ration Card ${rationCardNumber} does not exist`);
+      }
 
-    if (!rationCardDetails['doesFamilyHeadAvailable']) {
-      if (isFamilyHead) {
+      const rationCardDetails = await this.readRationCard(ctx, rationCardNumber);
+      const retailerDetails = await this.readRationRetailer(ctx, rationCardDetails['rationRetailerId'])
+
+      let familyHeadStatus;
+      let familyHeadDetails = await this.determineFamilyHead(ctx, rationCardNumber);
+
+      if (!familyHeadDetails['isFamilyHeadAvailable']) {
+        familyHeadStatus = true;
+      } else {
+        if (familyHeadDetails['sex'] === 'Male') {
+          if (sex === 'Female') {
+            if (parseInt(age) >= 18) {
+              familyHeadStatus = true;
+            } else {
+              familyHeadStatus = false;
+            }
+          } else {
+            if (parseInt(age) > familyHeadDetails['age']) {
+              familyHeadStatus = true;
+            } else {
+              familyHeadStatus = false;
+            }
+          }
+        } else {
+          if (sex === 'Female') {
+            if (parseInt(age) > familyHeadDetails['age']) {
+              familyHeadStatus = true;
+            } else {
+              familyHeadStatus = false;
+            }
+          } else {
+            familyHeadStatus = false;
+          }
+        }
+      }
+
+
+      if (familyHeadStatus && rationCardDetails['doesFamilyHeadAvailable']) {
+        const currentFamilyHead = await this.getCurrentFamilyHead(ctx, rationCardNumber);
+        currentFamilyHead['isFamilyHead'] = false;
+
+        rationCardDetails['familyHead'] = name;
+        rationCardDetails['familyHeadNumber'] = consumerNumber;
+
+        const currentFamilyHeadBuffer = Buffer.from(JSON.stringify(currentFamilyHead));
+        await ctx.stub.putState(familyHeadDetails['id'], currentFamilyHeadBuffer);
+      } else if (familyHeadStatus && !rationCardDetails['doesFamilyHeadAvailable']) {
         rationCardDetails['familyHead'] = name;
         rationCardDetails['familyHeadNumber'] = consumerNumber;
         rationCardDetails['doesFamilyHeadAvailable'] = true;
       }
-    } else {
-      if (isFamilyHead) {
-        isFamilyHead = false;
-      }
-    }
 
-    const currentIncome = rationCardDetails['totalFamilyIncome'];
-    const latestIncome = currentIncome + individualIncome;
-    rationCardDetails['totalFamilyIncome'] = latestIncome;
-    const familyMembers = rationCardDetails['totalFamilyMembers'];
-    const typeChange = this.willTypeChangeOccure(currentIncome, latestIncome, familyMembers, familyMembers+1);
+      const currentIncome = rationCardDetails['totalFamilyIncome'];
+      const latestIncome = currentIncome + parseFloat(individualIncome);
+      rationCardDetails['totalFamilyIncome'] = latestIncome;
+      const familyMembers = rationCardDetails['totalFamilyMembers'];
+      const typeChange = this.willTypeChangeOccure(currentIncome, latestIncome, familyMembers, familyMembers + 1);
 
-    if (typeChange['changeOccure']) {
-      rationCardDetails['rationCardType'] = typeChange['type'];
-      rationCardDetails['rationCardColour'] = typeChange['colour'];
+      if (typeChange['changeOccure']) {
+        rationCardDetails['rationCardType'] = typeChange['type'];
+        rationCardDetails['rationCardColour'] = typeChange['newColour'];
 
-      if (familyMembers !== 0) {
-        switch (typeChange['oldColour']) {
+        if (typeChange['status'] === 'Change occures') {
+          switch (typeChange['oldColour']) {
+            case 'Yellow':
+              retailerDetails['yellowCardConsumers'] -= familyMembers;
+              retailerDetails['yellowCardFamilies']--;
+              break;
+            case 'Pink':
+              retailerDetails['pinkCardConsumers'] -= familyMembers;
+              break;
+            case 'Blue':
+              retailerDetails['blueCardConsumers'] -= familyMembers;
+              break;
+            case 'White':
+              retailerDetails['whiteCardConsumers'] -= familyMembers;
+              break;
+            default:
+              break;
+          }
+
+          switch (typeChange['newColour']) {
+            case 'Yellow':
+              retailerDetails['yellowCardConsumers'] += (familyMembers + 1);
+              retailerDetails['yellowCardFamilies']++;
+              break;
+            case 'Pink':
+              retailerDetails['pinkCardConsumers'] += (familyMembers + 1);
+              break;
+            case 'Blue':
+              retailerDetails['blueCardConsumers'] += (familyMembers + 1);
+              break;
+            case 'White':
+              retailerDetails['whiteCardConsumers'] += (familyMembers + 1);
+              break;
+            default:
+              break;
+          }
+        } else if (typeChange['status'] === 'Current Family Empty') {
+          switch (typeChange['newColour']) {
+            case 'Yellow':
+              retailerDetails['yellowCardConsumers']++;
+              retailerDetails['yellowCardFamilies']++;
+              break;
+            case 'Pink':
+              retailerDetails['pinkCardConsumers']++;
+              break;
+            case 'Blue':
+              retailerDetails['blueCardConsumers']++;
+              break;
+            case 'White':
+              retailerDetails['whiteCardConsumers']++;
+              break;
+            default:
+              break;
+          }
+        }
+      } else {
+        switch (rationCardDetails['rationCardColour']) {
           case 'Yellow':
-            retailerDetails['yellowCardConsumers'] -= familyMembers;
-            retailerDetails['yellowCardFamilies']--;
+            retailerDetails['yellowCardConsumers']++;
+            retailerDetails['yellowCardFamilies']++;
             break;
           case 'Pink':
-            retailerDetails['pinkCardConsumers'] -= familyMembers;
+            retailerDetails['pinkCardConsumers']++;
             break;
           case 'Blue':
-            retailerDetails['blueCardConsumers'] -= familyMembers;
+            retailerDetails['blueCardConsumers']++;
             break;
           case 'White':
-            retailerDetails['whiteCardConsumers'] -= familyMembers;
+            retailerDetails['whiteCardConsumers']++;
             break;
           default:
             break;
         }
       }
 
-      switch (typeChange['colour']) {
-        case 'Yellow':
-          retailerDetails['yellowCardConsumers'] += (familyMembers + 1);
-          rationCardDetails['yellowCardFamilies']++;
-          break;
-        case 'Pink':
-          retailerDetails['pinkCardConsumers'] += (familyMembers + 1);
-          break;
-        case 'Blue':
-          retailerDetails['blueCardConsumers'] += (familyMembers + 1);
-          break;
-        case 'White':
-          retailerDetails['whiteCardConsumers'] += (familyMembers + 1);
-          break;
-        default:
-          break;
-      }
+      rationCardDetails['totalFamilyMembers'] = familyMembers + 1;
+
+      let consumer = {
+        consumerNumber,
+        rationCardNumber,
+        nodalOfficerId: rationCardDetails['nodalOfficerId'],
+        rationRetailerId: rationCardDetails['rationRetailerId'],
+        name,
+        age: parseInt(age),
+        sex,
+        occupation,
+        individualIncome: parseFloat(individualIncome),
+        isFamilyHead: familyHeadStatus,
+        dataType: 'Consumer Account'
+      };
+
+      const rationCardBuffer = Buffer.from(JSON.stringify(rationCardDetails));
+      await ctx.stub.putState(rationCardNumber, rationCardBuffer);
+
+      const retailerBuffer = Buffer.from(JSON.stringify(retailerDetails));
+      await ctx.stub.putState(rationCardDetails['rationRetailerId'], retailerBuffer);
+
+      const consumberBuffer = Buffer.from(JSON.stringify(consumer));
+      await ctx.stub.putState(consumerNumber, consumberBuffer);
     } else {
-      switch (rationCardDetails['rationCardColour']) {
-        case 'Yellow':
-          retailerDetails['yellowCardConsumers']++;
-          break;
-        case 'Pink':
-          retailerDetails['pinkCardConsumers']++;
-          break;
-        case 'Blue':
-          retailerDetails['blueCardConsumers']++;
-          break;
-        case 'White':
-          retailerDetails['whiteCardConsumers']++;
-          break;
-        default:
-          break;
-      }
+      logger.info('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+      return ('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
     }
-
-    rationCardDetails['totalFamilyMembers'] = familyMembers + 1;
-
-    let consumer = {
-      consumerNumber,
-      rationCardNumber,
-      nodalOfficerId: rationCardDetails['nodalOfficerId'],
-      rationRetailerId: rationCardDetails['rationRetailerId'],
-      name,
-      age,
-      sex,
-      occupation,
-      individualIncome,
-      isFamilyHead,
-      dataType: 'Consumer Account'
-    };
-
-    const rationCardBuffer = Buffer.from(JSON.stringify(rationCardDetails));
-    await ctx.stub.putState(rationCardNumber, rationCardBuffer);
-
-    const retailerBuffer = Buffer.from(JSON.stringify(retailerDetails));
-    await ctx.stub.putState(rationCardDetails['rationRetailerId'], retailerBuffer);
-
-    const consumberBuffer = Buffer.from(JSON.stringify(consumer));
-    await ctx.stub.putState(consumerNumber, consumberBuffer);
   }
 
   // readConsumer
@@ -823,34 +1112,299 @@ class CivilSuppliesNetworkContract extends Contract {
   // deleteConsumer
   // @param: consumerNumber
   async deleteConsumer(ctx, consumerNumber) {
-    const exists = await this.consumerExist(ctx, consumerNumber);
-    if (!exists) {
-      throw new Error(`The Consumer ${consumerNumber} does not exist`);
-    }
+    let logger = shim.newLogger('Chaincode --> ');
+    let CID = new shim.ClientIdentity(ctx.stub);
+    let mspID = CID.getMSPID();
+    logger.info('MSPID : ' + mspID);
 
-    const consumer = await this.readConsumer(ctx, consumerNumber);
-    const rationCardDetails = await this.readRationCard(ctx, consumer['rationCardNumber']);
-    const retailerDetails = await this.readRationRetailer(ctx, consumer['rationRetailerId'])
-
-    if (rationCardDetails['doesFamilyHeadAvailable']) {
-      if (consumer['isFamilyHead']) {
-        rationCardDetails['familyHead'] = null;
-        rationCardDetails['familyHeadNumber'] = null;
-        rationCardDetails['doesFamilyHeadAvailable'] = false;
+    if (mspID === 'NodalOfficerMSP') {
+      const exists = await this.consumerExist(ctx, consumerNumber);
+      if (!exists) {
+        throw new Error(`The Consumer ${consumerNumber} does not exist`);
       }
+
+      const consumer = await this.readConsumer(ctx, consumerNumber);
+      const rationCardDetails = await this.readRationCard(ctx, consumer['rationCardNumber']);
+      const retailerDetails = await this.readRationRetailer(ctx, consumer['rationRetailerId'])
+
+      let familyHeadStatus = consumer['isFamilyHead'];
+
+      if (familyHeadStatus) {
+        const secondFamilyHeadDetails = await this.determineSecondFamilyHead(ctx, consumer['rationCardNumber']);
+        if (!secondFamilyHeadDetails['isSecondFamilyHeadAvailable']) {
+          rationCardDetails['familyHead'] = null;
+          rationCardDetails['familyHeadNumber'] = null;
+          rationCardDetails['doesFamilyHeadAvailable'] = false;
+        } else {
+          rationCardDetails['familyHead'] = secondFamilyHeadDetails['name'];
+          rationCardDetails['familyHeadNumber'] = secondFamilyHeadDetails['id'];
+
+          const newFamilyHead = await this.readConsumer(ctx, secondFamilyHeadDetails['id']);
+          newFamilyHead['isFamilyHead'] = true;
+
+          const newFamilyHeadBuffer = Buffer.from(JSON.stringify(newFamilyHead));
+          await ctx.stub.putState(secondFamilyHeadDetails['id'], newFamilyHeadBuffer);
+        }
+      }
+
+      const currentIncome = rationCardDetails['totalFamilyIncome'];
+      const latestIncome = currentIncome - consumer['individualIncome'];
+      rationCardDetails['totalFamilyIncome'] = latestIncome;
+      const familyMembers = rationCardDetails['totalFamilyMembers'];
+      const typeChange = this.willTypeChangeOccure(currentIncome, latestIncome, familyMembers, familyMembers - 1);
+
+      if (typeChange['changeOccure']) {
+        if (typeChange['status'] === 'Change occures') {
+          rationCardDetails['rationCardType'] = typeChange['type'];
+          rationCardDetails['rationCardColour'] = typeChange['newColour'];
+          switch (typeChange['oldColour']) {
+            case 'Yellow':
+              retailerDetails['yellowCardConsumers'] -= familyMembers;
+              retailerDetails['yellowCardFamilies']--;
+              break;
+            case 'Pink':
+              retailerDetails['pinkCardConsumers'] -= familyMembers;
+              break;
+            case 'Blue':
+              retailerDetails['blueCardConsumers'] -= familyMembers;
+              break;
+            case 'White':
+              retailerDetails['whiteCardConsumers'] -= familyMembers;
+              break;
+            default:
+              break;
+          }
+
+          switch (typeChange['newColour']) {
+            case 'Yellow':
+              retailerDetails['yellowCardConsumers'] += (familyMembers - 1);
+              retailerDetails['yellowCardFamilies']++
+              break;
+            case 'Pink':
+              retailerDetails['pinkCardConsumers'] += (familyMembers - 1);
+              break;
+            case 'Blue':
+              retailerDetails['blueCardConsumers'] += (familyMembers - 1);
+              break;
+            case 'White':
+              retailerDetails['whiteCardConsumers'] += (familyMembers - 1);
+              break;
+            default:
+              break;
+          }
+
+        } else if (typeChange['status'] === 'New Family Empty') {
+          rationCardDetails['rationCardType'] = null;
+          rationCardDetails['rationCardColour'] = null;
+
+          switch (typeChange['oldColour']) {
+            case 'Yellow':
+              retailerDetails['yellowCardConsumers']--;
+              retailerDetails['yellowCardFamilies']--
+              break;
+            case 'Pink':
+              retailerDetails['pinkCardConsumers']--;
+              break;
+            case 'Blue':
+              retailerDetails['blueCardConsumers']--;
+              break;
+            case 'White':
+              retailerDetails['whiteCardConsumers']--;
+              break;
+            default:
+              break;
+          }
+        }
+      } else {
+        switch (rationCardDetails['rationCardColour']) {
+          case 'Yellow':
+            retailerDetails['yellowCardConsumers']--;
+            break;
+          case 'Pink':
+            retailerDetails['pinkCardConsumers']--;
+            break;
+          case 'Blue':
+            retailerDetails['blueCardConsumers']--;
+            break;
+          case 'White':
+            retailerDetails['whiteCardConsumers']--;
+            break;
+          default:
+            break;
+        }
+      }
+
+      rationCardDetails['totalFamilyMembers'] = familyMembers - 1;
+
+      const rationCardBuffer = Buffer.from(JSON.stringify(rationCardDetails));
+      await ctx.stub.putState(consumer['rationCardNumber'], rationCardBuffer);
+
+      const retailerBuffer = Buffer.from(JSON.stringify(retailerDetails));
+      await ctx.stub.putState(rationCardDetails['rationRetailerId'], retailerBuffer);
+
+      await ctx.stub.deleteState(consumerNumber);
+    } else {
+      logger.info('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+      return ('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
     }
+  }
 
-    const currentIncome = rationCardDetails['totalFamilyIncome'];
-    const latestIncome = currentIncome - consumer['individualIncome'];
-    rationCardDetails['totalFamilyIncome'] = latestIncome;
-    const familyMembers = rationCardDetails['totalFamilyMembers'];
-    const typeChange = this.willTypeChangeOccure(currentIncome, latestIncome, familyMembers, familyMembers-1);
+  // updateConsumerPersonalDetails
+  // @params: consumerNumber, newName, newAge
+  async updateConsumerPersonalDetails(ctx, consumerNumber, newName, newAge, newSex) {
+    let logger = shim.newLogger('Chaincode --> ');
+    let CID = new shim.ClientIdentity(ctx.stub);
+    let mspID = CID.getMSPID();
+    logger.info('MSPID : ' + mspID);
 
-    if (typeChange['changeOccure']) {
-      rationCardDetails['rationCardType'] = typeChange['type'];
-      rationCardDetails['rationCardColour'] = typeChange['colour'];
+    if (mspID === 'NodalOfficerMSP') {
+      const exists = await this.consumerExist(ctx, consumerNumber);
+      if (!exists) {
+        throw new Error(`The Consumer ${consumerNumber} does not exist`);
+      }
 
-      if (familyMembers !== 0) {
+      const consumer = await this.readConsumer(ctx, consumerNumber);
+      const rationCardDetails = await this.readRationCard(ctx, consumer['rationCardNumber']);
+
+      if (consumer['isFamilyHead']) {
+        if (newSex === 'Female') {
+          if (parseInt(newAge) < 18) {
+            const secondFamilyHead = await this.determineSecondFamilyHead(ctx, consumer['rationCardNumber']);
+            console.log(secondFamilyHead);
+            if (secondFamilyHead['isSecondFamilyHeadAvailable']) {
+              if (
+                (
+                  secondFamilyHead['sex'] === 'Female' &&
+                  parseInt(newAge) < secondFamilyHead['age']
+                ) ||
+                secondFamilyHead['sex'] === 'Male'
+              ) {
+                consumer['isFamilyHead'] = false;
+                const secondFamilyHeadDetails = await this.readConsumer(ctx, secondFamilyHead['id']);
+                secondFamilyHeadDetails['isFamilyHead'] = true;
+
+                rationCardDetails['familyHead'] = secondFamilyHead['name'];
+                rationCardDetails['familyHeadNumber'] = secondFamilyHead['id'];
+
+                const secondFamilyHeadBuffer = Buffer.from(JSON.stringify(secondFamilyHeadDetails));
+                await ctx.stub.putState(secondFamilyHead['id'], secondFamilyHeadBuffer);
+              } else if (
+                secondFamilyHead['sex'] === 'Female' &&
+                parseInt(newAge) > secondFamilyHead['age']
+              ) {
+                rationCardDetails['familyHead'] = newName;
+              }
+            } else {
+              rationCardDetails['familyHead'] = newName;
+            }
+          } else {
+            rationCardDetails['familyHead'] = newName;
+          }
+        } else {
+          const secondFamilyHead = await this.determineSecondFamilyHead(ctx, consumer['rationCardNumber']);
+          if (parseInt(newAge) < secondFamilyHead['age']) {
+            consumer['isFamilyHead'] = false;
+            const secondFamilyHeadDetails = await this.readConsumer(ctx, secondFamilyHead['id']);
+            secondFamilyHeadDetails['isFamilyHead'] = true;
+
+            rationCardDetails['familyHead'] = secondFamilyHead['name'];
+            rationCardDetails['familyHeadNumber'] = secondFamilyHead['id'];
+
+            const secondFamilyHeadBuffer = Buffer.from(JSON.stringify(secondFamilyHeadDetails));
+            await ctx.stub.putState(secondFamilyHead['id'], secondFamilyHeadBuffer);
+          } else {
+            rationCardDetails['familyHead'] = newName;
+          }
+        }
+      } else {
+        const currentFamilyHead = await this.determineFamilyHead(ctx, consumer['rationCardNumber']);
+
+        let familyHeadStatus = false;
+        if (
+          currentFamilyHead['sex'] === 'Male' &&
+          newSex === 'Female' &&
+          parseInt(newAge) >= 18
+        ) {
+          familyHeadStatus = true;
+        } else if (
+          currentFamilyHead['sex'] === 'Male' &&
+          newSex === 'Male' &&
+          parseInt(newAge) > currentFamilyHead['age']
+        ) {
+          familyHeadStatus = true;
+        } else if (
+          currentFamilyHead['sex'] === 'Female' &&
+          newSex === 'Female' &&
+          parseInt(newAge) > currentFamilyHead['age']
+        ) {
+          familyHeadStatus = true;
+        }
+
+        if (familyHeadStatus) {
+          const currentFamilyHeadDetails = await this.readConsumer(ctx, currentFamilyHead['id'])
+          currentFamilyHeadDetails['isFamilyHead'] = false;
+
+          rationCardDetails['familyHead'] = newName;
+          rationCardDetails['familyHeadNumber'] = consumerNumber;
+
+          const currentFamilyHeadBuffer = Buffer.from(JSON.stringify(currentFamilyHeadDetails));
+          await ctx.stub.putState(currentFamilyHead['id'], currentFamilyHeadBuffer);
+        }
+        consumer['isFamilyHead'] = familyHeadStatus;
+      }
+
+      consumer['name'] = newName;
+      consumer['age'] = parseInt(newAge);
+      consumer['sex'] = newSex;
+
+      const rationCardBuffer = Buffer.from(JSON.stringify(rationCardDetails));
+      await ctx.stub.putState(consumer['rationCardNumber'], rationCardBuffer);
+
+      const consumberBuffer = Buffer.from(JSON.stringify(consumer));
+      await ctx.stub.putState(consumerNumber, consumberBuffer);
+    } else {
+      logger.info('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+      return ('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+    }
+  }
+
+  // updateConsumerProfessionalDetails
+  // @params: consumerNumber, newOccupation, newIndividualIncome
+  async updateConsumerProfessionalDetails(
+    ctx,
+    consumerNumber,
+    newOccupation,
+    newIndividualIncome
+  ) {
+    let logger = shim.newLogger('Chaincode --> ');
+    let CID = new shim.ClientIdentity(ctx.stub);
+    let mspID = CID.getMSPID();
+    logger.info('MSPID : ' + mspID);
+
+    if (mspID === 'NodalOfficerMSP') {
+      const exists = await this.consumerExist(ctx, consumerNumber);
+      if (!exists) {
+        throw new Error(`The Consumer ${consumerNumber} does not exist`);
+      }
+
+      const consumer = await this.readConsumer(ctx, consumerNumber);
+      const rationCardDetails = await this.readRationCard(ctx, consumer['rationCardNumber']);
+      const retailerDetails = await this.readRationRetailer(ctx, consumer['rationRetailerId']);
+
+      const currentIndividualIncome = consumer['individualIncome'];
+      const currentFamilyIncome = rationCardDetails['totalFamilyIncome'];
+      const newFamilyIncome = currentFamilyIncome - currentIndividualIncome + parseFloat(newIndividualIncome);
+      const familyMembers = rationCardDetails['totalFamilyMembers'];
+      const typeChange = this.willTypeChangeOccure(currentFamilyIncome, newFamilyIncome, familyMembers, familyMembers);
+
+      if (typeChange['changeOccure'] && typeChange['status'] === 'Change occures') {
+        rationCardDetails['rationCardType'] = typeChange['type'];
+        rationCardDetails['rationCardColour'] = typeChange['newColour'];
+
         switch (typeChange['oldColour']) {
           case 'Yellow':
             retailerDetails['yellowCardConsumers'] -= familyMembers;
@@ -867,353 +1421,462 @@ class CivilSuppliesNetworkContract extends Contract {
             break;
           default:
             break;
+        };
+
+        switch (typeChange['newColour']) {
+          case 'Yellow':
+            retailerDetails['yellowCardConsumers'] += familyMembers;
+            retailerDetails['yellowCardFamilies']++;
+            break;
+          case 'Pink':
+            retailerDetails['pinkCardConsumers'] += familyMembers;
+            break;
+          case 'Blue':
+            retailerDetails['blueCardConsumers'] += familyMembers;
+            break;
+          case 'White':
+            retailerDetails['whiteCardConsumers'] += familyMembers;
+            break;
+          default:
+            break;
         }
       }
 
-      switch (typeChange['colour']) {
-        case 'Yellow':
-          retailerDetails['yellowCardConsumers'] += (familyMembers - 1);
-          retailerDetails['yellowCardFamilies']++
-          break;
-        case 'Pink':
-          retailerDetails['pinkCardConsumers'] += (familyMembers - 1);
-          break;
-        case 'Blue':
-          retailerDetails['blueCardConsumers'] += (familyMembers - 1);
-          break;
-        case 'White':
-          retailerDetails['whiteCardConsumers'] += (familyMembers - 1);
-          break;
-        default:
-          break;
-      }
+      consumer['occupation'] = newOccupation;
+      consumer['individualIncome'] = parseFloat(newIndividualIncome);
+      rationCardDetails['totalFamilyIncome'] = newFamilyIncome;
+
+      const rationCardBuffer = Buffer.from(JSON.stringify(rationCardDetails));
+      await ctx.stub.putState(consumer['rationCardNumber'], rationCardBuffer);
+
+      const retailerBuffer = Buffer.from(JSON.stringify(retailerDetails));
+      await ctx.stub.putState(consumer['rationRetailerId'], retailerBuffer);
+
+      const consumberBuffer = Buffer.from(JSON.stringify(consumer));
+      await ctx.stub.putState(consumerNumber, consumberBuffer);
     } else {
-      switch (rationCardDetails['rationCardColour']) {
-        case 'Yellow':
-          retailerDetails['yellowCardConsumers']--;
-          break;
-        case 'Pink':
-          retailerDetails['pinkCardConsumers']--;
-          break;
-        case 'Blue':
-          retailerDetails['blueCardConsumers']--;
-          break;
-        case 'White':
-          retailerDetails['whiteCardConsumers']--;
-          break;
-        default:
-          break;
-      }
+      logger.info('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+      return ('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
     }
-
-    rationCardDetails['totalFamilyMembers'] = familyMembers - 1;
-
-    const rationCardBuffer = Buffer.from(JSON.stringify(rationCardDetails));
-    await ctx.stub.putState(consumer['rationCardNumber'], rationCardBuffer);
-
-    const retailerBuffer = Buffer.from(JSON.stringify(retailerDetails));
-    await ctx.stub.putState(rationCardDetails['rationRetailerId'], retailerBuffer);
-
-    await ctx.stub.deleteState(consumerNumber);
-  }
-
-  // updateConsumerPersonalDetails
-  // @params: consumerNumber, newName, newAge
-  async updateConsumerPersonalDetails(ctx, consumerNumber, newName, newAge, newSex) {
-    const exists = await this.consumerExist(ctx, consumerNumber);
-    if (!exists) {
-      throw new Error(`The Consumer ${consumerNumber} does not exist`);
-    }
-
-    const consumer = await this.readConsumer(ctx, consumerNumber);
-    const rationCardDetails = await this.readRationCard(ctx, consumer['rationCardNumber']);
-
-    if (rationCardDetails['doesFamilyHeadAvailable']) {
-      if (consumer['isFamilyHead']) {
-        rationCardDetails['familyHead'] = newName;
-      }
-    }
-
-    consumer['name'] = newName;
-    consumer['age'] = newAge;
-    consumer['sex'] = newSex;
-
-    const rationCardBuffer = Buffer.from(JSON.stringify(rationCardDetails));
-    await ctx.stub.putState(consumer['rationCardNumber'], rationCardBuffer);
-
-    const consumberBuffer = Buffer.from(JSON.stringify(consumer));
-    await ctx.stub.putState(consumerNumber, consumberBuffer);
-  }
-
-  // updateConsumerProfessionalDetails
-  // @params: consumerNumber, newOccupation, newIndividualIncome
-  async updateConsumerProfessionalDetails(ctx, consumerNumber, newOccupation, newIndividualIncome) {
-    const exists = await this.consumerExist(ctx, consumerNumber);
-    if (!exists) {
-      throw new Error(`The Consumer ${consumerNumber} does not exist`);
-    }
-
-    const consumer = await this.readConsumer(ctx, consumerNumber);
-    const rationCardDetails = await this.readRationCard(ctx, consumer['rationCardNumber']);
-    const retailerDetails = await this.readRationRetailer(ctx, consumer['rationRetailerId']);
-
-    const currentIndividualIncome = consumer['individualIncome'];
-    const currentFamilyIncome = rationCardDetails['totalFamilyIncome'];
-    const newFamilyIncome = currentFamilyIncome - currentIndividualIncome + newIndividualIncome;
-    const familyMembers = rationCardDetails['totalFamilyMembers'];
-    const typeChange = this.willTypeChangeOccure(currentFamilyIncome, newFamilyIncome, familyMembers, familyMembers);
-
-    if (typeChange['changeOccure']) {
-      rationCardDetails['rationCardType'] = typeChange['type'];
-      rationCardDetails['rationCardColour'] = typeChange['colour'];
-
-      switch (typeChange['oldColour']) {
-        case 'Yellow':
-          retailerDetails['yellowCardConsumers'] -= familyMembers;
-          retailerDetails['yellowCardFamilies']--;
-          break;
-        case 'Pink':
-          retailerDetails['pinkCardConsumers'] -= familyMembers;
-          break;
-        case 'Blue':
-          retailerDetails['blueCardConsumers'] -= familyMembers;
-          break;
-        case 'White':
-          retailerDetails['whiteCardConsumers'] -= familyMembers;
-          break;
-        default:
-          break;
-      };
-
-      switch (typeChange['colour']) {
-        case 'Yellow':
-          retailerDetails['yellowCardConsumers'] += familyMembers;
-          retailerDetails['yellowCardFamilies']++;
-          break;
-        case 'Pink':
-          retailerDetails['pinkCardConsumers'] += familyMembers;
-          break;
-        case 'Blue':
-          retailerDetails['blueCardConsumers'] += familyMembers;
-          break;
-        case 'White':
-          retailerDetails['whiteCardConsumers'] += familyMembers;
-          break;
-        default:
-          break;
-      }
-    }
-
-    consumer['occupation'] = newOccupation;
-    consumer['individualIncome'] = newIndividualIncome;
-    rationCardDetails['totalFamilyIncome'] = newFamilyIncome;
-
-    const rationCardBuffer = Buffer.from(JSON.stringify(rationCardDetails));
-    await ctx.stub.putState(consumer['rationCardNumber'], rationCardBuffer);
-
-    const retailerBuffer = Buffer.from(JSON.stringify(retailerDetails));
-    await ctx.stub.putState(consumer['rationRetailerId'], retailerBuffer);
-
-    const consumberBuffer = Buffer.from(JSON.stringify(consumer));
-    await ctx.stub.putState(consumerNumber, consumberBuffer);
   }
 
   // shiftConsumerToAnotherFamily
   // @params: consumerNumber, newRationCardNumber
   async shiftConsumerToAnotherFamily(ctx, consumerNumber, newRationCardNumber) {
-    const consumerExists = await this.consumerExist(ctx, consumerNumber);
-    if (!consumerExists) {
-      throw new Error(`The Consumer ${consumerNumber} does not exist`);
-    }
+    let logger = shim.newLogger('Chaincode --> ');
+    let CID = new shim.ClientIdentity(ctx.stub);
+    let mspID = CID.getMSPID();
+    logger.info('MSPID : ' + mspID);
 
-    const cardExists = await this.rationCardExist(ctx, newRationCardNumber);
-    if (!cardExists) {
-      throw new Error(`The Ration Card ${newRationCardNumber} does not exist`);
-    }
-
-    const consumer = await this.readConsumer(ctx, consumerNumber);
-    const currentCardNumber = consumer['rationCardNumber'];
-    const currentFamily = await this.readRationCard(ctx, currentCardNumber);
-    const currentFamilyMembers = currentFamily['totalFamilyMembers'];
-    const newFamily = await this.readRationCard(ctx, newRationCardNumber);
-    const newFamilyMembers = newFamily['totalFamilyMembers'];
-    const currentRetailerId = consumer['rationRetailerId']
-    const currentRetailer = await this.readRationRetailer(ctx, currentRetailerId);
-    const newRetailer = await this.readRationRetailer(ctx, newFamily['rationRetailerId']);
-
-    if (currentFamily['doesFamilyHeadAvailable']) {
-      if (consumer['isFamilyHead']) {
-        currentFamily['familyHead'] = null;
-        currentFamily['familyHeadNumber'] = null;
-        currentFamily['doesFamilyHeadAvailable'] = false;
+    if (mspID === 'CommisionerMSP') {
+      const consumerExists = await this.consumerExist(ctx, consumerNumber);
+      if (!consumerExists) {
+        throw new Error(`The Consumer ${consumerNumber} does not exist`);
       }
-    }
 
-    if (!newFamily['doesFamilyHeadAvailable']) {
-      if (consumer['isFamilyHead']) {
-        newFamily['familyHead'] = consumer['name'];
-        newFamily['familyHeadNumber'] = consumerNumber;
-        newFamily['doesFamilyHeadAvailable'] = true;
+      const cardExists = await this.rationCardExist(ctx, newRationCardNumber);
+      if (!cardExists) {
+        throw new Error(`The Ration Card ${newRationCardNumber} does not exist`);
       }
-    } else {
-      if (consumer['isFamilyHead']) {
-        consumer['isFamilyHead'] = false;
+
+      const consumer = await this.readConsumer(ctx, consumerNumber);
+      const income = consumer['individualIncome'];
+
+      const currentCardNumber = consumer['rationCardNumber'];
+      if (currentCardNumber === newRationCardNumber) {
+        throw new Error(`The new Ration Card ${newRationCardNumber} is same as the current one`);
       }
-    }
 
-    const income = consumer['individualIncome'];
-    const currentFamilyCurrentIncome = currentFamily['totalFamilyIncome'];
-    const currentFamilyLatestIncome = currentFamilyCurrentIncome - income;
-    const typeChange1 = this.willTypeChangeOccure(currentFamilyCurrentIncome, currentFamilyLatestIncome, currentFamilyMembers, currentFamilyMembers-1);
+      const newFamily = await this.readRationCard(ctx, newRationCardNumber);
+      const currentFamily = await this.readRationCard(ctx, currentCardNumber);
 
-    if (typeChange1['changeOccure']) {
-      currentFamily['rationCardType'] = typeChange1['type'];
-      currentFamily['rationCardColour'] = typeChange1['colour'];
+      if (consumer['rationRetailerId'] === newFamily['rationRetailerId']) {
+        const retailerDetails = await this.readRationRetailer(ctx, consumer['rationRetailerId']);
+        const typeChange1 =
+          this.willTypeChangeOccure(
+            currentFamily['totalFamilyIncome'],
+            currentFamily['totalFamilyIncome'] - income,
+            currentFamily['totalFamilyMembers'],
+            currentFamily['totalFamilyMembers'] - 1
+          );
 
-      if (currentFamilyMembers !== 0) {
         switch (typeChange1['oldColour']) {
           case 'Yellow':
-            currentRetailer['yellowCardConsumers'] -= currentFamilyMembers;
+            retailerDetails['yellowCardConsumers'] -= currentFamily['totalFamilyMembers'];
+            retailerDetails['yellowCardFamilies']--;
+            break;
+          case 'Pink':
+            retailerDetails['pinkCardConsumers'] -= currentFamily['totalFamilyMembers'];
+            break;
+          case 'Blue':
+            retailerDetails['blueCardConsumers'] -= currentFamily['totalFamilyMembers'];
+            break;
+          case 'White':
+            retailerDetails['whiteCardConsumers'] -= currentFamily['totalFamilyMembers'];
+            break;
+          default:
+            break;
+        }
+
+        if (typeChange1['changeOccure'] && typeChange1['status'] === 'Change occures') {
+          currentFamily['rationCardType'] = typeChange1['type'];
+          currentFamily['rationCardColour'] = typeChange1['newColour'];
+
+          switch (typeChange1['newColour']) {
+            case 'Yellow':
+              retailerDetails['yellowCardConsumers'] += (currentFamily['totalFamilyMembers'] - 1);
+              retailerDetails['yellowCardFamilies']++;
+              break;
+            case 'Pink':
+              retailerDetails['pinkCardConsumers'] += (currentFamily['totalFamilyMembers'] - 1);
+              break;
+            case 'Blue':
+              retailerDetails['blueCardConsumers'] += (currentFamily['totalFamilyMembers'] - 1);
+              break;
+            case 'White':
+              retailerDetails['whiteCardConsumers'] += (currentFamily['totalFamilyMembers'] - 1);
+              break;
+            default:
+              break;
+          }
+        } else if (typeChange1['changeOccure'] && typeChange1['status'] === 'New Family Empty') {
+          currentFamily['rationCardType'] = null;
+          currentFamily['rationCardColour'] = null;
+        } else if (!typeChange1['changeOccure']) {
+          switch (currentFamily['rationCardColour']) {
+            case 'Yellow':
+              retailerDetails['yellowCardConsumers']--;
+              break;
+            case 'Pink':
+              retailerDetails['pinkCardConsumers']--;
+              break;
+            case 'Blue':
+              retailerDetails['blueCardConsumers']--;
+              break;
+            case 'White':
+              retailerDetails['whiteCardConsumers']--;
+              break;
+            default:
+              break;
+          }
+        }
+
+        const typeChange2 =
+          this.willTypeChangeOccure(
+            newFamily['totalFamilyIncome'],
+            newFamily['totalFamilyIncome'] + income,
+            newFamily['totalFamilyMembers'],
+            newFamily['totalFamilyMembers'] + 1
+          )
+
+        newFamily['rationCardType'] = typeChange2['type'];
+        newFamily['rationCardColour'] = typeChange2['newColour'];
+        if (typeChange2['changeOccure'] && typeChange2['status'] === 'Change occures') {
+          switch (typeChange2['oldColour']) {
+            case 'Yellow':
+              retailerDetails['yellowCardConsumers'] -= newFamily['totalFamilyMembers'];
+              retailerDetails['yellowCardFamilies']--;
+              break;
+            case 'Pink':
+              retailerDetails['pinkCardConsumers'] -= newFamily['totalFamilyMembers'];
+              break;
+            case 'Blue':
+              retailerDetails['blueCardConsumers'] -= newFamily['totalFamilyMembers'];
+              break;
+            case 'White':
+              retailerDetails['whiteCardConsumers'] -= newFamily['totalFamilyMembers'];
+              break;
+            default:
+              break;
+          }
+        } else if (!typeChange2['changeOccure']) {
+          switch (newFamily['rationCardColour']) {
+            case 'Yellow':
+              retailerDetails['yellowCardConsumers']++;
+              break;
+            case 'Pink':
+              retailerDetails['pinkCardConsumers']++;
+              break;
+            case 'Blue':
+              retailerDetails['blueCardConsumers']++;
+              break;
+            case 'White':
+              retailerDetails['whiteCardConsumers']++;
+              break;
+            default:
+              break;
+          }
+        }
+
+        switch (typeChange2['newColour']) {
+          case 'Yellow':
+            retailerDetails['yellowCardConsumers'] += (newFamily['totalFamilyMembers'] + 1);
+            retailerDetails['yellowCardFamilies']++;
+            break;
+          case 'Pink':
+            retailerDetails['pinkCardConsumers'] += (newFamily['totalFamilyMembers'] + 1);
+            break;
+          case 'Blue':
+            retailerDetails['blueCardConsumers'] += (newFamily['totalFamilyMembers'] + 1);
+            break;
+          case 'White':
+            retailerDetails['whiteCardConsumers'] += (newFamily['totalFamilyMembers'] + 1);
+            break;
+          default:
+            break;
+        }
+
+        console.log(retailerDetails);
+
+        const retailerBuffer = Buffer.from(JSON.stringify(retailerDetails));
+        await ctx.stub.putState(consumer['rationRetailerId'], retailerBuffer);
+      } else {
+        const currentRetailerId = consumer['rationRetailerId']
+        const currentRetailer = await this.readRationRetailer(ctx, currentRetailerId);
+        const newRetailer = await this.readRationRetailer(ctx, newFamily['rationRetailerId']);
+
+        const typeChange3 =
+          this.willTypeChangeOccure(
+            currentFamily['totalFamilyIncome'],
+            currentFamily['totalFamilyIncome'] + income,
+            currentFamily['totalFamilyMembers'],
+            currentFamily['totalFamilyMembers'] - 1
+          );
+
+        switch (typeChange3['oldColour']) {
+          case 'Yellow':
+            currentRetailer['yellowCardConsumers'] -= currentFamily['totalFamilyMembers'];
             currentRetailer['yellowCardFamilies']--;
             break;
           case 'Pink':
-            currentRetailer['pinkCardConsumers'] -= currentFamilyMembers;
+            currentRetailer['pinkCardConsumers'] -= currentFamily['totalFamilyMembers'];
             break;
           case 'Blue':
-            currentRetailer['blueCardConsumers'] -= currentFamilyMembers;
+            currentRetailer['blueCardConsumers'] -= currentFamily['totalFamilyMembers'];
             break;
           case 'White':
-            currentRetailer['whiteCardConsumers'] -= currentFamilyMembers;
+            currentRetailer['whiteCardConsumers'] -= currentFamily['totalFamilyMembers'];
             break;
           default:
             break;
         }
-      }
 
-      switch (typeChange1['colour']) {
-        case 'Yellow':
-          currentRetailer['yellowCardConsumers'] += (currentFamilyMembers - 1);
-          currentRetailer['yellowCardFamilies']++;
-          break;
-        case 'Pink':
-          currentRetailer['pinkCardConsumers'] += (currentFamilyMembers - 1);
-          break;
-        case 'Blue':
-          currentRetailer['blueCardConsumers'] += (currentFamilyMembers - 1);
-          break;
-        case 'White':
-          currentRetailer['whiteCardConsumers'] += (currentFamilyMembers - 1);
-          break;
-        default:
-          break;
-      }
-    } else {
-      switch (currentFamily['rationCardColour']) {
-        case 'Yellow':
-          currentRetailer['yellowCardConsumers']--;
-          break;
-        case 'Pink':
-          currentRetailer['pinkCardConsumers']--;
-          break;
-        case 'Blue':
-          currentRetailer['blueCardConsumers']--;
-          break;
-        case 'White':
-          currentRetailer['whiteCardConsumers']--;
-          break;
-        default:
-          break;
-      }
-    }
+        if (typeChange3['changeOccure'] && typeChange3['status'] === 'Change occures') {
+          currentFamily['rationCardType'] = typeChange3['type'];
+          currentFamily['rationCardColour'] = typeChange3['newColour'];
 
-    currentFamily['totalFamilyMembers'] = currentFamilyMembers - 1;
-    currentFamily['totalFamilyIncome'] = currentFamilyLatestIncome;
+          switch (typeChange3['newColour']) {
+            case 'Yellow':
+              currentRetailer['yellowCardConsumers'] += (currentFamily['totalFamilyMembers'] - 1);
+              currentRetailer['yellowCardFamilies']++;
+              break;
+            case 'Pink':
+              currentRetailer['pinkCardConsumers'] += (currentFamily['totalFamilyMembers'] - 1);
+              break;
+            case 'Blue':
+              currentRetailer['blueCardConsumers'] += (currentFamily['totalFamilyMembers'] - 1);
+              break;
+            case 'White':
+              currentRetailer['whiteCardConsumers'] += (currentFamily['totalFamilyMembers'] - 1);
+              break;
+            default:
+              break;
+          }
+        } else if (typeChange3['changeOccure'] && typeChange3['status'] === 'New Family Empty') {
+          currentFamily['rationCardType'] = null;
+          currentFamily['rationCardColour'] = null;
+        } else if (!typeChange3['changeOccure']) {
+          switch (currentFamily['rationCardColour']) {
+            case 'Yellow':
+              currentRetailer['yellowCardConsumers']--;
+              break;
+            case 'Pink':
+              currentRetailer['pinkCardConsumers']--;
+              break;
+            case 'Blue':
+              currentRetailer['blueCardConsumers']--;
+              break;
+            case 'White':
+              currentRetailer['whiteCardConsumers']--;
+              break;
+            default:
+              break;
+          }
+        }
+        
+        console.log(currentRetailer);
 
-    const newFamilyCurrentIncome = newFamily['totalFamilyIncome'];
-    const newFamilyLatestIncome = newFamilyCurrentIncome + income;
-    const typeChange2 = this.willTypeChangeOccure(newFamilyCurrentIncome, newFamilyLatestIncome, newFamilyMembers, newFamilyMembers+1);
+        const currentRetailerBuffer = Buffer.from(JSON.stringify(currentRetailer));
+        await ctx.stub.putState(currentRetailerId, currentRetailerBuffer);
 
-    if (typeChange2['changeOccure']) {
-      newFamily['rationCardType'] = typeChange2['type'];
-      newFamily['rationCardColour'] = typeChange2['colour'];
+        const typeChange4 =
+          this.willTypeChangeOccure(
+            newFamily['totalFamilyIncome'],
+            newFamily['totalFamilyIncome'] + income,
+            newFamily['totalFamilyMembers'],
+            newFamily['totalFamilyMembers'] + 1
+          )
 
-      if (newFamilyMembers !== 0) {
-        switch (typeChange2['oldColour']) {
+        newFamily['rationCardType'] = typeChange4['type'];
+        newFamily['rationCardColour'] = typeChange4['newColour'];
+        if (typeChange4['changeOccure'] && typeChange4['status'] === 'Change occures') {
+          switch (typeChange4['oldColour']) {
+            case 'Yellow':
+              newRetailer['yellowCardConsumers'] -= newFamily['totalFamilyMembers'];
+              newRetailer['yellowCardFamilies']--;
+              break;
+            case 'Pink':
+              newRetailer['pinkCardConsumers'] -= newFamily['totalFamilyMembers'];
+              break;
+            case 'Blue':
+              newRetailer['blueCardConsumers'] -= newFamily['totalFamilyMembers'];
+              break;
+            case 'White':
+              newRetailer['whiteCardConsumers'] -= newFamily['totalFamilyMembers'];
+              break;
+            default:
+              break;
+          }
+        } else if (!typeChange4['changeOccure']) {
+          switch (newFamily['rationCardColour']) {
+            case 'Yellow':
+              newRetailer['yellowCardConsumers']++;
+              break;
+            case 'Pink':
+              newRetailer['pinkCardConsumers']++;
+              break;
+            case 'Blue':
+              newRetailer['blueCardConsumers']++;
+              break;
+            case 'White':
+              newRetailer['whiteCardConsumers']++;
+              break;
+            default:
+              break;
+          }
+        }
+
+        switch (typeChange4['newColour']) {
           case 'Yellow':
-            newRetailer['yellowCardConsumers'] -= newFamilyMembers;
-            newRetailer['yellowCardFamilies']--;
+            newRetailer['yellowCardConsumers'] += (newFamily['totalFamilyMembers'] + 1);
+            newRetailer['yellowCardFamilies']++;
             break;
           case 'Pink':
-            newRetailer['pinkCardConsumers'] -= newFamilyMembers;
+            newRetailer['pinkCardConsumers'] += (newFamily['totalFamilyMembers'] + 1);
             break;
           case 'Blue':
-            newRetailer['blueCardConsumers'] -= newFamilyMembers;
+            newRetailer['blueCardConsumers'] += (newFamily['totalFamilyMembers'] + 1);
             break;
           case 'White':
-            newRetailer['whiteCardConsumers'] -= newFamilyMembers;
+            newRetailer['whiteCardConsumers'] += (newFamily['totalFamilyMembers'] + 1);
             break;
           default:
             break;
         }
+
+        console.log(newRetailer)
+
+        const newRetailerBuffer = Buffer.from(JSON.stringify(newRetailer));
+        await ctx.stub.putState(newFamily['rationRetailerId'], newRetailerBuffer);
       }
 
-      switch (typeChange2['colour']) {
-        case 'Yellow':
-          newRetailer['yellowCardConsumers'] += (newFamilyMembers + 1);
-          newRetailer['yellowCardFamilies']++;
-          break;
-        case 'Pink':
-          newRetailer['pinkCardConsumers'] += (newFamilyMembers + 1);
-          break;
-        case 'Blue':
-          newRetailer['blueCardConsumers'] += (newFamilyMembers + 1);
-          break;
-        case 'White':
-          newRetailer['whiteCardConsumers'] += (newFamilyMembers + 1);
-          break;
-        default:
-          break;
+      if (currentFamily['totalFamilyMembers'] === 1) {
+        currentFamily['familyHead'] = null;
+        currentFamily['familyHeadNumber'] = null;
+        currentFamily['doesFamilyHeadAvailable'] = false;
+      } else {
+        if (consumer['isFamilyHead']) {
+          const secondFamilyHeadDetails = await this.determineSecondFamilyHead(ctx, currentCardNumber);
+          currentFamily['familyHead'] = secondFamilyHeadDetails['name'];
+          currentFamily['familyHeadNumber'] = secondFamilyHeadDetails['id'];
+
+          const newFamilyHead = await this.readConsumer(ctx, secondFamilyHeadDetails['id']);
+          newFamilyHead['isFamilyHead'] = true;
+
+          consumer['isFamilyHead'] = false;
+
+          const newFamilyHeadBuffer = Buffer.from(JSON.stringify(newFamilyHead));
+          await ctx.stub.putState(secondFamilyHeadDetails['id'], newFamilyHeadBuffer);
+        }
       }
+
+      currentFamily['totalFamilyMembers']--;
+      currentFamily['totalFamilyIncome'] -= income;
+
+      const currentFamilyBuffer = Buffer.from(JSON.stringify(currentFamily));
+      await ctx.stub.putState(currentCardNumber, currentFamilyBuffer);
+
+      if (newFamily['totalFamilyMembers'] === 0) {
+        newFamily['familyHead'] = consumer['name'];
+        newFamily['familyHeadNumber'] = consumerNumber;
+        newFamily['doesFamilyHeadAvailable'] = true;
+      } else {
+        const familyHeadDetails = await this.determineFamilyHead(ctx, newRationCardNumber);
+        let familyHeadStatus;
+        if (familyHeadDetails['sex'] === 'Male') {
+          if (consumer['sex'] === 'Female') {
+            if (consumer['age'] >= 18) {
+              familyHeadStatus = true;
+            } else {
+              familyHeadStatus = false;
+            }
+          } else {
+            if (consumer['age'] > familyHeadDetails['age']) {
+              familyHeadStatus = true;
+            } else {
+              familyHeadStatus = false;
+            }
+          }
+        } else {
+          if (consumer['sex'] === 'Female') {
+            if (consumer['age'] > familyHeadDetails['age']) {
+              familyHeadStatus = true;
+            } else {
+              familyHeadStatus = false;
+            }
+          } else {
+            familyHeadStatus = false;
+          }
+        }
+        if (familyHeadStatus) {
+          const currentFamilyHead = await this.readConsumer(ctx, familyHeadDetails['id'])
+          currentFamilyHead['isFamilyHead'] = false;
+
+          newFamily['familyHead'] = consumer['name'];
+          newFamily['familyHeadNumber'] = consumerNumber;
+
+          const currentFamilyHeadBuffer = Buffer.from(JSON.stringify(currentFamilyHead));
+          await ctx.stub.putState(familyHeadDetails['id'], currentFamilyHeadBuffer);
+        }
+        consumer['isFamilyHead'] = familyHeadStatus;
+      }
+
+      newFamily['totalFamilyMembers']++;
+      newFamily['totalFamilyIncome'] += income;
+
+      const newFamilyBuffer = Buffer.from(JSON.stringify(newFamily));
+      await ctx.stub.putState(newRationCardNumber, newFamilyBuffer);
+
+      consumer['rationCardNumber'] = newRationCardNumber;
+      consumer['nodalOfficerId'] = newFamily['nodalOfficerId'];
+      consumer['rationRetailerId'] = newFamily['rationRetailerId'];
+
+      const consumberBuffer = Buffer.from(JSON.stringify(consumer));
+      await ctx.stub.putState(consumerNumber, consumberBuffer);
+
+      let shiftConsumerToAnotherFamilyEvent = {
+        Type: 'Shifting one consumer to another family',
+        ConsumerNumber: consumerNumber
+      }
+      await ctx.stub.setEvent('shiftConsumerToAnotherFamilyEvent', Buffer.from(JSON.stringify(shiftConsumerToAnotherFamilyEvent)));
     } else {
-      switch (rationCardDetails['rationCardColour']) {
-        case 'Yellow':
-          newRetailer['yellowCardConsumers']++;
-          break;
-        case 'Pink':
-          newRetailer['pinkCardConsumers']++;
-          break;
-        case 'Blue':
-          newRetailer['blueCardConsumers']++;
-          break;
-        case 'White':
-          newRetailer['whiteCardConsumers']++;
-          break;
-        default:
-          break;
-      }
+      logger.info('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+      return ('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
     }
-
-    newFamily['totalFamilyMembers'] = newFamilyMembers + 1;
-    newFamily['totalFamilyIncome'] = newFamilyLatestIncome;
-
-    consumer['rationCardNumber'] = newRationCardNumber;
-    consumer['nodalOfficerId'] = newFamily['nodalOfficerId'];
-    consumer['rationRetailerId'] = newFamily['rationRetailerId'];
-
-    const currentFamilyBuffer = Buffer.from(JSON.stringify(currentFamily));
-    await ctx.stub.putState(currentCardNumber, currentFamilyBuffer);
-
-    const newFamilyBuffer = Buffer.from(JSON.stringify(newFamily));
-    await ctx.stub.putState(newRationCardNumber, newFamilyBuffer);
-
-    const currentRetailerBuffer = Buffer.from(JSON.stringify(currentRetailer));
-    await ctx.stub.putState(currentRetailerId, currentRetailerBuffer);
-
-    const newRetailerBuffer = Buffer.from(JSON.stringify(newRetailer));
-    await ctx.stub.putState(newFamily['rationRetailerId'], newRetailerBuffer);
-
-    const consumberBuffer = Buffer.from(JSON.stringify(consumer));
-    await ctx.stub.putState(consumerNumber, consumberBuffer);
   }
 
   // retailerPurchaseExist
@@ -1232,150 +1895,174 @@ class CivilSuppliesNetworkContract extends Contract {
     rationCardColour,
     itemName
   ) {
-    const purchaseExist = await this.retailerPurchaseExist(ctx, retailerPurchaseNumber);
-    if (purchaseExist) {
-      throw new Error(`The Retailer Purchase ${retailerPurchaseNumber} already exist`);
-    }
+    let logger = shim.newLogger('Chaincode --> ');
+    let CID = new shim.ClientIdentity(ctx.stub);
+    let mspID = CID.getMSPID();
+    logger.info('MSPID : ' + mspID);
 
-    const retailerExists = await this.rationRetailerExists(ctx, rationRetailerId);
-    if (!retailerExists) {
-      throw new Error(`The Ration Retailer ${rationRetailerId} does not exist`);
-    }
+    if (mspID === 'RationRetailerMSP') {
+      const purchaseExist = await this.retailerPurchaseExist(ctx, retailerPurchaseNumber);
+      if (purchaseExist) {
+        throw new Error(`The Retailer Purchase ${retailerPurchaseNumber} already exist`);
+      }
 
-    const retailerDetails = await this.readRationRetailer(ctx, rationRetailerId);
+      const retailerExists = await this.rationRetailerExists(ctx, rationRetailerId);
+      if (!retailerExists) {
+        throw new Error(`The Ration Retailer ${rationRetailerId} does not exist`);
+      }
 
-    const purchaseDetails = {};
-    if (rationCardColour === 'Yellow' && itemName === 'Rice') {
-      purchaseDetails['totalQuantity'] = retailerDetails['yellowCardFamilies'] * 30;
-      purchaseDetails['isDistributedIndividually'] = false;
-      purchaseDetails['overallQuantity'] = 30;
-      purchaseDetails['pricePerQuantity'] = 0;
-      purchaseDetails['basicUnit'] = 'Kg';
-    } else if (rationCardColour === 'Yellow' && itemName === 'Wheet') {
-      purchaseDetails['totalQuantity'] = retailerDetails['yellowCardFamilies'] * 5;
-      purchaseDetails['isDistributedIndividually'] = false;
-      purchaseDetails['overallQuantity'] = 5;
-      purchaseDetails['pricePerQuantity'] = 0;
-      purchaseDetails['basicUnit'] = 'Kg';
-    } else if (rationCardColour === 'Yellow' && itemName === 'Sugar') {
-      purchaseDetails['totalQuantity'] = retailerDetails['yellowCardConsumers'] * 0.4;
-      purchaseDetails['isDistributedIndividually'] = true;
-      purchaseDetails['individualQuantity'] = 0.4;
-      purchaseDetails['pricePerQuantity'] = 13.5;
-      purchaseDetails['basicUnit'] = 'Kg';
-    } else if (rationCardColour === 'Pink' && itemName === 'Rice') {
-      purchaseDetails['totalQuantity'] = retailerDetails['pinkCardConsumers'] * 4;
-      purchaseDetails['isDistributedIndividually'] = true;
-      purchaseDetails['individualQuantity'] = 4;
-      purchaseDetails['pricePerQuantity'] = 2;
-      purchaseDetails['basicUnit'] = 'Kg';
-    } else if (rationCardColour === 'Pink' && itemName === 'Wheet') {
-      purchaseDetails['totalQuantity'] = retailerDetails['pinkCardConsumers'] * 1;
-      purchaseDetails['isDistributedIndividually'] = true;
-      purchaseDetails['individualQuantity'] = 1;
-      purchaseDetails['pricePerQuantity'] = 2;
-      purchaseDetails['basicUnit'] = 'Kg';
-    } else if (rationCardColour === 'Pink' && itemName === 'Sugar') {
-      purchaseDetails['totalQuantity'] = retailerDetails['pinkCardConsumers'] * 0.4;
-      purchaseDetails['isDistributedIndividually'] = true;
-      purchaseDetails['individualQuantity'] = 0.4;
-      purchaseDetails['pricePerQuantity'] = 13.5;
-      purchaseDetails['basicUnit'] = 'Kg';
-    } else if (rationCardColour === 'Blue' && itemName === 'Rice') {
-      purchaseDetails['totalQuantity'] = retailerDetails['blueCardConsumers'] * 2;
-      purchaseDetails['isDistributedIndividually'] = true;
-      purchaseDetails['individualQuantity'] = 2;
-      purchaseDetails['basicUnit'] = 'Kg';
-      purchaseDetails['pricePerQuantity'] = 4;
-    } else if (rationCardColour === 'Blue' && itemName === 'Wheet') {
-      purchaseDetails['totalQuantity'] = retailerDetails['blueCardConsumers'] * 2;
-      purchaseDetails['isDistributedIndividually'] = true;
-      purchaseDetails['individualQuantity'] = 2;
-      purchaseDetails['basicUnit'] = 'Kg';
-      purchaseDetails['pricePerQuantity'] = 6.7;
-    } else if (rationCardColour === 'Blue' && itemName === 'Fortified Atta') {
-      purchaseDetails['totalQuantity'] = retailerDetails['blueCardConsumers'] * 2;
-      purchaseDetails['isDistributedIndividually'] = true;
-      purchaseDetails['individualQuantity'] = 2;
-      purchaseDetails['basicUnit'] = 'Kg';
-      purchaseDetails['pricePerQuantity'] = 17;
-    } else if (rationCardColour === 'White' && itemName === 'Rice') {
-      purchaseDetails['totalQuantity'] = retailerDetails['whiteCardConsumers'] * 2;
-      purchaseDetails['isDistributedIndividually'] = true;
-      purchaseDetails['individualQuantity'] = 2;
-      purchaseDetails['basicUnit'] = 'Kg';
-      purchaseDetails['pricePerQuantity'] = 10.9;
-    } else if (rationCardColour === 'White' && itemName === 'Wheet') {
-      purchaseDetails['totalQuantity'] = retailerDetails['whiteCardConsumers'] * 2;
-      purchaseDetails['isDistributedIndividually'] = true;
-      purchaseDetails['individualQuantity'] = 2;
-      purchaseDetails['basicUnit'] = 'Kg';
-      purchaseDetails['pricePerQuantity'] = 6.7;
-    } else if (rationCardColour === 'White' && itemName === 'Fortified Atta') {
-      purchaseDetails['totalQuantity'] = retailerDetails['whiteCardConsumers'] * 2;
-      purchaseDetails['isDistributedIndividually'] = true;
-      purchaseDetails['individualQuantity'] = 2;
-      purchaseDetails['basicUnit'] = 'Kg';
-      purchaseDetails['pricePerQuantity'] = 17;
-    }
-    
-    const asset = {
-      retailerPurchaseNumber,
-      nodalOfficerId: retailerDetails['nodalOfficerId'],
-      rationRetailerId,
-      rationCardColour,
-      itemName,
-      basicUnit: purchaseDetails['basicUnit'],
-      isDistributedIndividually: purchaseDetails['isDistributedIndividually'],
-      overallQuantity: !purchaseDetails['isDistributedIndividually']? purchaseDetails.overallQuantity: 0,
-      individualQuantity: purchaseDetails['isDistributedIndividually']? purchaseDetails.individualQuantity: 0,
-      pricePerQuantity: purchaseDetails['pricePerQuantity'],
-      totalQuantity: purchaseDetails['totalQuantity'],
-      presentQuantity: purchaseDetails['totalQuantity'],
-      purchaseDate: Date(Date.now()),
-      dataType: 'Retailer Food Items Purchase'
-    }
+      const retailerDetails = await this.readRationRetailer(ctx, rationRetailerId);
 
-    const buffer = Buffer.from(JSON.stringify(asset));
-    await ctx.stub.putState(retailerPurchaseNumber, buffer);
+      const purchaseDetails = {};
+      if (rationCardColour === 'Yellow' && itemName === 'Rice') {
+        purchaseDetails['totalQuantity'] = retailerDetails['yellowCardFamilies'] * 30;
+        purchaseDetails['isDistributedIndividually'] = false;
+        purchaseDetails['overallQuantity'] = 30;
+        purchaseDetails['pricePerQuantity'] = 0;
+        purchaseDetails['basicUnit'] = 'Kg';
+      } else if (rationCardColour === 'Yellow' && itemName === 'Wheet') {
+        purchaseDetails['totalQuantity'] = retailerDetails['yellowCardFamilies'] * 5;
+        purchaseDetails['isDistributedIndividually'] = false;
+        purchaseDetails['overallQuantity'] = 5;
+        purchaseDetails['pricePerQuantity'] = 0;
+        purchaseDetails['basicUnit'] = 'Kg';
+      } else if (rationCardColour === 'Yellow' && itemName === 'Sugar') {
+        purchaseDetails['totalQuantity'] = retailerDetails['yellowCardConsumers'] * 0.4;
+        purchaseDetails['isDistributedIndividually'] = true;
+        purchaseDetails['individualQuantity'] = 0.4;
+        purchaseDetails['pricePerQuantity'] = 13.5;
+        purchaseDetails['basicUnit'] = 'Kg';
+      } else if (rationCardColour === 'Pink' && itemName === 'Rice') {
+        purchaseDetails['totalQuantity'] = retailerDetails['pinkCardConsumers'] * 4;
+        purchaseDetails['isDistributedIndividually'] = true;
+        purchaseDetails['individualQuantity'] = 4;
+        purchaseDetails['pricePerQuantity'] = 2;
+        purchaseDetails['basicUnit'] = 'Kg';
+      } else if (rationCardColour === 'Pink' && itemName === 'Wheet') {
+        purchaseDetails['totalQuantity'] = retailerDetails['pinkCardConsumers'] * 1;
+        purchaseDetails['isDistributedIndividually'] = true;
+        purchaseDetails['individualQuantity'] = 1;
+        purchaseDetails['pricePerQuantity'] = 2;
+        purchaseDetails['basicUnit'] = 'Kg';
+      } else if (rationCardColour === 'Pink' && itemName === 'Sugar') {
+        purchaseDetails['totalQuantity'] = retailerDetails['pinkCardConsumers'] * 0.4;
+        purchaseDetails['isDistributedIndividually'] = true;
+        purchaseDetails['individualQuantity'] = 0.4;
+        purchaseDetails['pricePerQuantity'] = 13.5;
+        purchaseDetails['basicUnit'] = 'Kg';
+      } else if (rationCardColour === 'Blue' && itemName === 'Rice') {
+        purchaseDetails['totalQuantity'] = retailerDetails['blueCardConsumers'] * 2;
+        purchaseDetails['isDistributedIndividually'] = true;
+        purchaseDetails['individualQuantity'] = 2;
+        purchaseDetails['basicUnit'] = 'Kg';
+        purchaseDetails['pricePerQuantity'] = 4;
+      } else if (rationCardColour === 'Blue' && itemName === 'Wheet') {
+        purchaseDetails['totalQuantity'] = retailerDetails['blueCardConsumers'] * 2;
+        purchaseDetails['isDistributedIndividually'] = true;
+        purchaseDetails['individualQuantity'] = 2;
+        purchaseDetails['basicUnit'] = 'Kg';
+        purchaseDetails['pricePerQuantity'] = 6.7;
+      } else if (rationCardColour === 'Blue' && itemName === 'Fortified Atta') {
+        purchaseDetails['totalQuantity'] = retailerDetails['blueCardConsumers'] * 2;
+        purchaseDetails['isDistributedIndividually'] = true;
+        purchaseDetails['individualQuantity'] = 2;
+        purchaseDetails['basicUnit'] = 'Kg';
+        purchaseDetails['pricePerQuantity'] = 17;
+      } else if (rationCardColour === 'White' && itemName === 'Rice') {
+        purchaseDetails['totalQuantity'] = retailerDetails['whiteCardConsumers'] * 2;
+        purchaseDetails['isDistributedIndividually'] = true;
+        purchaseDetails['individualQuantity'] = 2;
+        purchaseDetails['basicUnit'] = 'Kg';
+        purchaseDetails['pricePerQuantity'] = 10.9;
+      } else if (rationCardColour === 'White' && itemName === 'Wheet') {
+        purchaseDetails['totalQuantity'] = retailerDetails['whiteCardConsumers'] * 2;
+        purchaseDetails['isDistributedIndividually'] = true;
+        purchaseDetails['individualQuantity'] = 2;
+        purchaseDetails['basicUnit'] = 'Kg';
+        purchaseDetails['pricePerQuantity'] = 6.7;
+      } else if (rationCardColour === 'White' && itemName === 'Fortified Atta') {
+        purchaseDetails['totalQuantity'] = retailerDetails['whiteCardConsumers'] * 2;
+        purchaseDetails['isDistributedIndividually'] = true;
+        purchaseDetails['individualQuantity'] = 2;
+        purchaseDetails['basicUnit'] = 'Kg';
+        purchaseDetails['pricePerQuantity'] = 17;
+      }
+
+      const asset = {
+        retailerPurchaseNumber,
+        nodalOfficerId: retailerDetails['nodalOfficerId'],
+        rationRetailerId,
+        rationCardColour,
+        itemName,
+        basicUnit: purchaseDetails['basicUnit'],
+        isDistributedIndividually: purchaseDetails['isDistributedIndividually'],
+        overallQuantity: !purchaseDetails['isDistributedIndividually'] ? purchaseDetails.overallQuantity : 0,
+        individualQuantity: purchaseDetails['isDistributedIndividually'] ? purchaseDetails.individualQuantity : 0,
+        pricePerQuantity: purchaseDetails['pricePerQuantity'],
+        totalQuantity: purchaseDetails['totalQuantity'],
+        presentQuantity: purchaseDetails['totalQuantity'],
+        purchaseDate: Date(Date.now()),
+        dataType: 'Retailer Food Items Purchase'
+      }
+
+      const buffer = Buffer.from(JSON.stringify(asset));
+      await ctx.stub.putState(retailerPurchaseNumber, buffer);
+    } else {
+      logger.info('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+      return ('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+    }
   }
 
   // makeRetailerKerosinePurchase
   // @params: retailerPurchaseNumber, rationRetailerId, rationCardColour, itemName
   async makeRetailerKerosinePurchase(ctx, retailerPurchaseNumber, rationRetailerId) {
-    const purchaseExist = await this.retailerPurchaseExist(ctx, retailerPurchaseNumber);
-    if (purchaseExist) {
-      throw new Error(`The Retailer Purchase ${retailerPurchaseNumber} already exist`);
+    let logger = shim.newLogger('Chaincode --> ');
+    let CID = new shim.ClientIdentity(ctx.stub);
+    let mspID = CID.getMSPID();
+    logger.info('MSPID : ' + mspID);
+
+    if (mspID === 'RationRetailerMSP') {
+      const purchaseExist = await this.retailerPurchaseExist(ctx, retailerPurchaseNumber);
+      if (purchaseExist) {
+        throw new Error(`The Retailer Purchase ${retailerPurchaseNumber} already exist`);
+      }
+
+      const retailerExists = await this.rationRetailerExists(ctx, rationRetailerId);
+      if (!retailerExists) {
+        throw new Error(`The Ration Retailer ${rationRetailerId} does not exist`);
+      }
+
+      const retailerDetails = await this.readRationRetailer(ctx, rationRetailerId);
+
+      const totalQuantity = retailerDetails['nonElectrifiedHomes'] * 4 + retailerDetails['electrifiedHomes'] * 0.5;
+
+      const asset = {
+        retailerPurchaseNumber,
+        nodalOfficerId: retailerDetails['nodalOfficerId'],
+        rationRetailerId,
+        itemName: 'Kerosine',
+        basicUnit: 'Litre',
+        isDistributedIndividually: false,
+        nonElectrifiedHomesQuantity: 4,
+        electrifiedHomesQuantity: 0.5,
+        nonElectrifiedHomesPricePerQuantity: 18,
+        electrifiedHomesPricePerQuantity: 17,
+        totalQuantity,
+        presentQuantity: totalQuantity,
+        purchaseDate: Date(Date.now()),
+        dataType: 'Retailer Kerosine Purchase'
+      }
+
+      const buffer = Buffer.from(JSON.stringify(asset));
+      await ctx.stub.putState(retailerPurchaseNumber, buffer);
+    } else {
+      logger.info('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+      return ('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
     }
-
-    const retailerExists = await this.rationRetailerExists(ctx, rationRetailerId);
-    if (!retailerExists) {
-      throw new Error(`The Ration Retailer ${rationRetailerId} does not exist`);
-    }
-
-    const retailerDetails = await this.readRationRetailer(ctx, rationRetailerId);
-
-    const totalQuantity = retailerDetails['nonElectrifiedHomes'] * 4 + retailerDetails['electrifiedHomes'] * 0.5;
-
-    const asset = {
-      retailerPurchaseNumber,
-      nodalOfficerId: retailerDetails['nodalOfficerId'],
-      rationRetailerId,
-      itemName: 'Kerosine',
-      basicUnit: 'Litre',
-      isDistributedIndividually: false,
-      nonElectrifiedHomesQuantity: 4,
-      electrifiedHomesQuantity: 0.5,
-      nonElectrifiedHomesPricePerQuantity: 18,
-      electrifiedHomesPricePerQuantity: 17,
-      totalQuantity,
-      presentQuantity: totalQuantity,
-      purchaseDate: Date(Date.now()),
-      dataType: 'Retailer Kerosine Purchase'
-    }
-
-    const buffer = Buffer.from(JSON.stringify(asset));
-    await ctx.stub.putState(retailerPurchaseNumber, buffer);
   }
 
   // readRetailerPurchase
@@ -1394,12 +2081,24 @@ class CivilSuppliesNetworkContract extends Contract {
   // deleteRetailerPurchase
   // @param: retailerPurchaseNumber
   async deleteRetailerPurchase(ctx, retailerPurchaseNumber) {
-    const exists = await this.retailerPurchaseExist(ctx, retailerPurchaseNumber);
-    if (!exists) {
-      throw new Error(`The Retailer Purchase ${retailerPurchaseNumber} does not exist`);
-    }
+    let logger = shim.newLogger('Chaincode --> ');
+    let CID = new shim.ClientIdentity(ctx.stub);
+    let mspID = CID.getMSPID();
+    logger.info('MSPID : ' + mspID);
 
-    await ctx.stub.deleteState(retailerPurchaseNumber);
+    if (mspID === 'RationRetailerMSP') {
+      const exists = await this.retailerPurchaseExist(ctx, retailerPurchaseNumber);
+      if (!exists) {
+        throw new Error(`The Retailer Purchase ${retailerPurchaseNumber} does not exist`);
+      }
+
+      await ctx.stub.deleteState(retailerPurchaseNumber);
+    } else {
+      logger.info('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+      return ('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+    }
   }
 
   // consumerPurchaseExist
@@ -1411,68 +2110,388 @@ class CivilSuppliesNetworkContract extends Contract {
 
   // makeConsumerPurchase
   // @params: consumerPurchaseNumber, retailerPurchaseNumber, rationCardNumber
-  async makeConsumerPurchase(ctx, consumerPurchaseNumber, retailerPurchaseNumber, rationCardNumber) {
-    const consumerPurchaseExists = await this.consumerPurchaseExist(ctx, consumerPurchaseNumber);
-    if (consumerPurchaseExists) {
-      throw new Error(`The Consumer Purchase ${consumerPurchaseNumber} already exist`);
+  async makeConsumerPurchase(
+    ctx,
+    consumerPurchaseNumber,
+    retailerPurchaseNumber,
+    rationCardNumber
+  ) {
+    let logger = shim.newLogger('Chaincode --> ');
+    let CID = new shim.ClientIdentity(ctx.stub);
+    let mspID = CID.getMSPID();
+    logger.info('MSPID : ' + mspID);
+
+    if (mspID === 'RationRetailerMSP') {
+      const consumerPurchaseExists = await this.consumerPurchaseExist(ctx, consumerPurchaseNumber);
+      if (consumerPurchaseExists) {
+        throw new Error(`The Consumer Purchase ${consumerPurchaseNumber} already exist`);
+      }
+
+      const retailerPurchaseExists = await this.retailerPurchaseExist(ctx, retailerPurchaseNumber);
+      if (!retailerPurchaseExists) {
+        throw new Error(`The Retailer Purchase ${retailerPurchaseNumber} does not exist`);
+      }
+
+      const rationCardExists = await this.rationCardExist(ctx, rationCardNumber);
+      if (!rationCardExists) {
+        throw new Error(`The Ration Card ${rationCardNumber} does not exist`);
+      }
+
+      const retailerPurchase = await this.readRetailerPurchase(ctx, retailerPurchaseNumber);
+      const rationCard = await this.readRationCard(ctx, rationCardNumber);
+
+      if (retailerPurchase['rationRetailerId'] !== rationCard['rationRetailerId']) {
+        throw new Error(`The Ration Card ${rationCardNumber} is not allowed to purchase using the Retailer Purchase ${retailerPurchaseNumber}.`)
+      }
+
+      let quantity, pricePerQuantity, price;
+      if (retailerPurchase['itemName'] === 'Kerosine') {
+        if (rationCard['isHomeElectrified']) {
+          quantity = retailerPurchase['electrifiedHomesQuantity'];
+          pricePerQuantity = retailerPurchase['electrifiedHomesPricePerQuantity'];
+        } else {
+          quantity = retailerPurchase['nonElectrifiedHomesQuantity'];
+          pricePerQuantity = retailerPurchase['nonElectrifiedHomesPricePerQuantity'];
+        }
+      } else {
+        if (retailerPurchase['isDistributedIndividually']) {
+          quantity = retailerPurchase['individualQuantity'] * rationCard['totalFamilyMembers'];
+        } else {
+          quantity = retailerPurchase['overallQuantity'];
+        }
+        pricePerQuantity = retailerPurchase['pricePerQuantity'];
+      }
+      price = quantity * pricePerQuantity;
+
+      let asset = {
+        consumerPurchaseNumber,
+        retailerPurchaseNumber,
+        rationCardNumber,
+        nodalOfficerId: rationCard['nodalOfficerId'],
+        rationRetailerId: rationCard['rationRetailerId'],
+        itemName: retailerPurchase['itemName'],
+        quantity,
+        pricePerQuantity,
+        price,
+        purchaseDate: Date(Date.now()),
+        dataType: 'Consumer Purchase'
+      }
+
+      retailerPurchase['presentQuantity'] -= quantity;
+
+      if (retailerPurchase['presentQuantity'] === 0) {
+        await this.deleteRetailerPurchase(ctx, retailerPurchaseNumber);
+      } else {
+        const retailerPurchaseBuffer = Buffer.from(JSON.stringify(retailerPurchase));
+        await ctx.stub.putState(retailerPurchaseNumber, retailerPurchaseBuffer);
+      }
+
+      const buffer = Buffer.from(JSON.stringify(asset));
+      await ctx.stub.putState(consumerPurchaseNumber, buffer);
+    } else {
+      logger.info('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+      return ('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+    }
+  }
+
+  // readConsumerPurchase
+  // @param: consumerPurchaseNumber
+  async readConsumerPurchase(ctx, consumerPurchaseNumber) {
+    const exists = await this.consumerPurchaseExist(ctx, consumerPurchaseNumber);
+    if (!exists) {
+      throw new Error(`The Consumer Purchase ${consumerPurchaseNumber} does not exist`);
     }
 
-    const retailerPurchaseExists = await this.retailerPurchaseExist(ctx, retailerPurchaseNumber);
-    if (!retailerPurchaseExists) {
-      throw new Error(`The Retailer Purchase ${retailerPurchaseNumber} does not exist`);
+    const buffer = await ctx.stub.getState(consumerPurchaseNumber);
+    const asset = JSON.parse(buffer.toString());
+    return asset;
+  }
+
+  // getNodalOfficers
+  async getNodalOfficers(ctx) {
+    const queryString = {
+      selector: {
+        dataType: 'Nodal Officer',
+      }
     }
 
-    const rationCardExists = await this.rationCardExist(ctx, rationCardNumber);
-    if (!rationCardExists) {
+    let resultsIterator = await ctx.stub.getQueryResult(JSON.stringify(queryString));
+    let results = await this.getAllResults(resultsIterator, false);
+
+    return JSON.stringify(results);
+  }
+
+  // getRationRetailers
+  async getRationRetailers(ctx, nodalOfficerId) {
+    const exists = await this.nodalOfficerExists(ctx, nodalOfficerId);
+    if (!exists) {
+      throw new Error(`The Nodal Officer ${nodalOfficerId} does not exist`);
+    }
+
+    const queryString = {
+      selector: {
+        nodalOfficerId: nodalOfficerId,
+        dataType: 'Ration Retailer'
+      }
+    }
+
+    let resultsIterator = await ctx.stub.getQueryResult(JSON.stringify(queryString));
+    let results = await this.getAllResults(resultsIterator, false);
+
+    return JSON.stringify(results);
+  }
+
+  // getRationCards
+  async getRationCards(ctx, rationRetailerId) {
+    const retailerExists = await this.rationRetailerExists(ctx, rationRetailerId);
+    if (!retailerExists) {
+      throw new Error(`The Ration Retailer ${rationRetailerId} does not exist`);
+    }
+
+    const queryString = {
+      selector: {
+        rationRetailerId: rationRetailerId,
+        dataType: 'Ration Card'
+      }
+    }
+
+    let resultsIterator = await ctx.stub.getQueryResult(JSON.stringify(queryString));
+    let results = await this.getAllResults(resultsIterator, false);
+
+    return JSON.stringify(results);
+  }
+
+  // getFamilyMembers
+  async getFamilyMembers(ctx, rationCardNumber) {
+    const exists = await this.rationCardExist(ctx, rationCardNumber);
+    if (!exists) {
       throw new Error(`The Ration Card ${rationCardNumber} does not exist`);
     }
 
-    const retailerPurchase = await this.readRetailerPurchase(ctx, retailerPurchaseNumber);
-    const rationCard = await this.readRationCard(ctx, rationCardNumber);
-
-    let quantity, pricePerQuantity, price;
-    if (retailerPurchase['itemName'] === 'Kerosine') {
-      if (rationCard['isHomeElectrified']) {
-        quantity = retailerPurchase['electrifiedHomesQuantity'];
-        pricePerQuantity = retailerPurchase['electrifiedHomesPricePerQuantity'];
-      } else {
-        quantity = retailerPurchase['nonElectrifiedHomesQuantity'];
-        pricePerQuantity = retailerPurchase['nonElectrifiedHomesPricePerQuantity'];
+    const queryString = {
+      selector: {
+        rationCardNumber: rationCardNumber,
+        dataType: 'Consumer Account'
       }
-    } else {
-      if (retailerPurchase['isDistributedIndividually']) {
-        quantity = retailerPurchase['individualQuantity'] * rationCard['totalFamilyMembers'];
-      } else {
-        quantity = retailerPurchase['overallQuantity'];
+    }
+
+    let resultsIterator = await ctx.stub.getQueryResult(JSON.stringify(queryString));
+    let results = await this.getAllResults(resultsIterator, false);
+
+    return JSON.stringify(results);
+  }
+
+  // getRetailerFoodItemsPurchases
+  async getRetailerFoodItemsPurchases(ctx, rationRetailerId) {
+    const retailerExists = await this.rationRetailerExists(ctx, rationRetailerId);
+    if (!retailerExists) {
+      throw new Error(`The Ration Retailer ${rationRetailerId} does not exist`);
+    }
+
+    const queryString = {
+      selector: {
+        rationRetailerId: rationRetailerId,
+        dataType: 'Retailer Food Items Purchase'
       }
-      pricePerQuantity = retailerPurchase['pricePerQuantity'];
-    }
-    price = quantity * pricePerQuantity;
-
-    let asset = {
-      consumerPurchaseNumber,
-      retailerPurchaseNumber,
-      nodalOfficerId: rationCard['nodalOfficerId'],
-      rationRetailerId: rationCard['rationRetailerId'],
-      itemName: retailerPurchase['itemName'],
-      quantity,
-      pricePerQuantity,
-      price,
-      purchaseDate: Date(Date.now()),
-      dataType: 'Consumer Purchase'
     }
 
-    retailerPurchase['presentQuantity'] -= quantity;
+    let resultsIterator = await ctx.stub.getQueryResult(JSON.stringify(queryString));
+    let results = await this.getAllResults(resultsIterator, false);
 
-    if (retailerPurchase['presentQuantity'] === 0) {
-      await this.deleteRetailerPurchase(ctx, retailerPurchaseNumber);
+    return JSON.stringify(results);
+  }
+
+  // getRetailerKerosinePurchases
+  async getRetailerKerosinePurchases(ctx, rationRetailerId) {
+    const retailerExists = await this.rationRetailerExists(ctx, rationRetailerId);
+    if (!retailerExists) {
+      throw new Error(`The Ration Retailer ${rationRetailerId} does not exist`);
+    }
+
+    const queryString = {
+      selector: {
+        rationRetailerId: rationRetailerId,
+        dataType: 'Retailer Kerosine Purchase'
+      }
+    }
+
+    let resultsIterator = await ctx.stub.getQueryResult(JSON.stringify(queryString));
+    let results = await this.getAllResults(resultsIterator, false);
+
+    return JSON.stringify(results);
+  }
+
+  // getRetailerKerosinePurchases
+  async getConsumerPurchases(ctx, rationCardNumber) {
+    const exists = await this.rationCardExist(ctx, rationCardNumber);
+    if (!exists) {
+      throw new Error(`The Ration Card ${rationCardNumber} does not exist`);
+    }
+
+    const queryString = {
+      selector: {
+        rationCardNumber: rationCardNumber,
+        dataType: 'Consumer Purchase'
+      }
+    }
+
+    let resultsIterator = await ctx.stub.getQueryResult(JSON.stringify(queryString));
+    let results = await this.getAllResults(resultsIterator, false);
+
+    return JSON.stringify(results);
+  }
+
+  // getAllResults
+  async getAllResults(iterator, isHistory) {
+    let allResults = [];
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      let res = await iterator.next();
+      if (res.value && res.value.value.toString()) {
+        let jsonRes = {};
+        console.log(res.value.value.toString('utf8'));
+
+        if (isHistory && isHistory === true) {
+          jsonRes.TxId = res.value.tx_id;
+          jsonRes.Timestamp = res.value.timestamp;
+          jsonRes.IsDelete = res.value.is_delete.toString();
+          try {
+            jsonRes.Value = JSON.parse(res.value.value.toString('utf8'));
+          } catch (err) {
+            console.log(err);
+            jsonRes.Value = res.value.value.toString('utf8');
+          }
+        } else {
+          jsonRes.Key = res.value.key;
+          try {
+            jsonRes.Record = JSON.parse(res.value.value.toString('utf8'));
+          } catch (err) {
+            console.log(err);
+            jsonRes.Record = res.value.value.toString('utf8');
+          }
+        }
+        allResults.push(jsonRes);
+      }
+      if (res.done) {
+        console.log('end of data');
+        await iterator.close();
+        console.info(allResults);
+        return allResults;
+      }
+    }
+  }
+
+  // determineFamilyHead
+  // @param: rationCardNumber
+  async determineFamilyHead(ctx, rationCardNumber) {
+    const exists = await this.rationCardExist(ctx, rationCardNumber);
+    if (!exists) {
+      throw new Error(`The Ration Card ${rationCardNumber} does not exist`);
+    }
+
+    let familyMembers = await this.getFamilyMembers(ctx, rationCardNumber);
+    familyMembers = JSON.parse(familyMembers);
+    console.log(typeof familyMembers, familyMembers.length);
+
+    if (Array.isArray(familyMembers) && !familyMembers.length) {
+      return { isFamilyHeadAvailable: false }
+    }
+
+    let name, age = 0, id;
+    for (let i = 0; i < familyMembers.length; i++) {
+      const familyMember = familyMembers[i];
+      if (familyMember['Record']['sex'] === 'Female') {
+        if (familyMember['Record']['age'] >= 18 && familyMember['Record']['age'] > age) {
+          name = familyMember['Record']['name'];
+          age = familyMember['Record']['age'];
+          id = familyMember['Key'];
+        }
+      }
+    }
+
+    if (age !== 0) {
+      return { isFamilyHeadAvailable: true, name, age, sex: 'Female', id };
     } else {
-      const retailerPurchaseBuffer = Buffer.from(JSON.stringify(retailerPurchase));
-      await ctx.stub.putState(retailerPurchaseNumber, retailerPurchaseBuffer); 
+      for (let i = 0; i < familyMembers.length; i++) {
+        const familyMember = familyMembers[i];
+        if (familyMember['Record']['sex'] === 'Male') {
+          if (familyMember['Record']['age'] > age) {
+            name = familyMember['Record']['name'];
+            age = familyMember['Record']['age'];
+            id = familyMember['Key'];
+          }
+        }
+      }
+      return { isFamilyHeadAvailable: true, name, age, sex: 'Male', id };
+    }
+  }
+
+  // determineSecondFamilyHead
+  // @param: rationCardNumber
+  async determineSecondFamilyHead(ctx, rationCardNumber) {
+    const exists = await this.rationCardExist(ctx, rationCardNumber);
+    if (!exists) {
+      throw new Error(`The Ration Card ${rationCardNumber} does not exist`);
     }
 
-    const buffer = Buffer.from(JSON.stringify(asset));
-    await ctx.stub.putState(consumerPurchaseNumber, buffer);
+    let familyMembers = await this.getFamilyMembers(ctx, rationCardNumber);
+    familyMembers = JSON.parse(familyMembers);
+
+    if (Array.isArray(familyMembers) && (!familyMembers.length || familyMembers.length === 1)) {
+      return { isSecondFamilyHeadAvailable: false }
+    }
+
+    const familyHead = await this.determineFamilyHead(ctx, rationCardNumber);
+    let name, age = 0, id;
+    for (let i = 0; i < familyMembers.length; i++) {
+      const familyMember = familyMembers[i];
+      if (familyMember['Key'] !== familyHead['id']) {
+        if (familyMember['Record']['sex'] === 'Female') {
+          if (familyMember['Record']['age'] >= 18 && familyMember['Record']['age'] > age) {
+            name = familyMember['Record']['name'];
+            age = familyMember['Record']['age'];
+            id = familyMember['Key'];
+          }
+        }
+      }
+    }
+
+    if (age !== 0) {
+      return { isSecondFamilyHeadAvailable: true, name, age, sex: 'Female', id };
+    } else {
+      for (let i = 0; i < familyMembers.length; i++) {
+        const familyMember = familyMembers[i];
+        if (familyMember['Key'] !== familyHead['id']) {
+          if (familyMember['Record']['sex'] === 'Male') {
+            if (familyMember['Record']['age'] > age) {
+              name = familyMember['Record']['name'];
+              age = familyMember['Record']['age'];
+              id = familyMember['Key'];
+            }
+          }
+        }
+      }
+      return { isSecondFamilyHeadAvailable: true, name, age, sex: 'Male', id };
+    }
+  }
+
+  // getCurrentFamilyHead
+  // @param: rationCardNumber
+  async getCurrentFamilyHead(ctx, rationCardNumber) {
+    const exists = await this.rationCardExist(ctx, rationCardNumber);
+    if (!exists) {
+      throw new Error(`The Ration Card ${rationCardNumber} does not exist`);
+    }
+
+    const rationCardDetails = await this.readRationCard(ctx, rationCardNumber);
+
+    const familyHeadNumber = rationCardDetails['familyHeadNumber'];
+
+    const familyHead = await this.readConsumer(ctx, familyHeadNumber);
+
+    return familyHead;
   }
 
 }
