@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>
+    <%=title%>
+  </title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link rel="stylesheet" href="/stylesheets/bootstrap.min.css" />
+  <link rel='stylesheet' href='/stylesheets/dashboard.css' />
+</head>
+
+<body>
+  <h1>
+    <%= title%>
+  </h1>
+  <div class="form-modal">
+
+    <div id="man-form">
+      <h3>
+        <%= subTitle1%>
+      </h3>
+      <form id="manform" action="/makeRetailerFoodPurchase/submit" method="POST"
+        onsubmit="return validateMakeRetailerFoodPurchaseForm();">
+        <table>
+          <tr>
+            <input name="retailerPurchaseNumber1" id="retailerPurchaseNumber1" class="form-control" type="text"
+              placeholder="Enter Retailer Purchase Number" />
+          </tr>
+          <tr>
+            <input name="rationRetailerId" id="rationRetailerId" class="form-control" type="text"
+              placeholder="Enter Ration Retailer ID" />
+          </tr>
+          <tr>
+            <select class="form-select" name="rationCardColour" id="rationCardColour" required>
+              <option selected disabled>Select Ration Card Colour</option>
+              <option value="Yellow">Yellow</option>
+              <option value="Pink">Pink</option>
+              <option value="Blue">Blue</option>
+              <option value="White">White</option>
+            </select>
+          </tr>
+          <tr>
+            <select class="form-select" name="itemName" id="itemName" required>
+              <option selected disabled>Select Item Name</option>
+              <option value="Rice">Rice</option>
+              <option value="Wheat">Wheat</option>
+              <option value="Sugar">Sugar</option>
+              <option value="Fortified Atta">Fortified Atta</option>
+            </select>
+          </tr>
+        </table>
+        <button type="submit" class="btn login">
+          <%= subTitle1%>
+        </button>
+
+      </form>
+
+    </div>
+
+    <div class="form-modal">
+
+      <div id="man-form">
+        <h3>
+          <%= subTitle2%>
+        </h3>
+        <form id="manform" action="/readRetailerPurchase" method="POST" onsubmit="return validateReadRetailerPurchase();">
+          <table>
+
+            <input name="retailerPurchaseNumber2" id="retailerPurchaseNumber2" class="form-control" type="text"
+              placeholder="Enter Retailer Purchase Number" />
+          </table>
+          <button type="submit" class="btn login fs-5 fw-bold mt-3">
+            <%= subTitle2%>
+          </button>
+
+        </form>
+
+      </div>
+
+
+      <br>
+
+    </div>
+    <script src="/javascripts/popper.js"></script>
+    <script src="/javascripts/bootstrap.min.js"></script>
+    <script src="/javascripts/index.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>
+    <%=title%>
+  </title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link rel="stylesheet" href="/stylesheets/bootstrap.min.css" />
+  <link rel='stylesheet' href='/stylesheets/dashboard.css' />
+</head>
+
+<body>
+  <h1>
+    <%= title%>
+  </h1>
+  <div class="form-modal">
+
+    <div id="man-form">
+      <h3>
+        <%= subTitle1%>
+      </h3>
+      <form id="manform" action="/addNewConsumer/submit" method="POST" onsubmit="return validateAddNewConsumerForm();">
+        <table>
+          <tr>
+            <input name="consumerNumber1" id="consumerNumber1" class="form-control" type="text"
+              placeholder="Enter Consumer Number" />
+          </tr>
+          <tr>
+            <input name="rationCardNumber" id="rationCardNumber" class="form-control" type="text"
+              placeholder="Enter Ration Card Number" />
+          </tr>
+          <tr>
+            <input name="name" id="name" class="form-control" type="text" placeholder="Enter Name" />
+          </tr>
+          <tr>
+            <input name="age" id="age" class="form-control" type="text" placeholder="Enter age" />
+          </tr>
+          <tr>
+            Sex
+            <label class="form-check-label" for="sex1">
+              Male<input type="radio" class="form-check-input" name="sex" id="sex1" value="Male">
+            </label>
+            <label class="form-check-label" for="sex2">
+              Female<input type="radio" class="form-check-input" name="sex" id="sex2" value="Female">
+            </label>
+          </tr>
+          <tr>
+            <input name="occupation" id="occupation" class="form-control" type="text" placeholder="Enter Occupation" />
+          </tr>
+          <tr>
+            <input name="individualIncome" id="individualIncome" class="form-control" type="text"
+              placeholder="Enter Individual Income" />
+          </tr>
+        </table>
+        <button type="submit" class="btn login">
+          <%= subTitle1%>
+        </button>
+
+      </form>
+
+    </div>
+
+    <div class="form-modal">
+
+      <div id="man-form">
+        <h3>
+          <%= subTitle2%>
+        </h3>
+        <form id="manform" action="/readConsumer" method="POST" onsubmit="return validateReadConsumerForm();">
+          <table>
+
+            <input name="consumerNumber2" id="consumerNumber2" class="form-control" type="text"
+              placeholder="Enter Consumer Number" />
+          </table>
+          <button type="submit" class="btn login fs-5 fw-bold mt-3">
+            <%= subTitle2%>
+          </button>
+
+        </form>
+
+      </div>
+
+
+      <br>
+
+    </div>
+    <script src="/javascripts/popper.js"></script>
+    <script src="/javascripts/bootstrap.min.js"></script>
+    <script src="/javascripts/index.js"></script>
+</body>
+
+</html>

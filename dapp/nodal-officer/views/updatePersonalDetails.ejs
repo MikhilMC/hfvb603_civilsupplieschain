@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>
+    <%=title%>
+  </title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link rel="stylesheet" href="/stylesheets/bootstrap.min.css" />
+  <link rel='stylesheet' href='/stylesheets/dashboard.css' />
+</head>
+
+<body>
+  <h1>
+    <%= title%>
+  </h1>
+  <div class="form-modal">
+
+    <div id="man-form">
+      <h3>
+        <%= subTitle%>
+      </h3>
+      <form id="manform" action="/updatePersonalDetails/submit" method="POST" onsubmit="return validateUpdatePersonalDetailsForm();">
+        <table>
+          <tr>
+            <input name="consumerNumber" id="consumerNumber" class="form-control" type="text"
+              placeholder="Enter Consumer Number" />
+          </tr>
+          <tr>
+            <input name="newName" id="newName" class="form-control" type="text" placeholder="Enter New Name" />
+          </tr>
+          <tr>
+            <input name="newAge" id="newAge" class="form-control" type="text" placeholder="Enter New age" />
+          </tr>
+          <tr>
+            Sex
+            <label class="form-check-label" for="newSex1">
+              Male<input type="radio" class="form-check-input" name="newSex" id="newSex1" value="Male">
+            </label>
+            <label class="form-check-label" for="newSex2">
+              Female<input type="radio" class="form-check-input" name="newSex" id="newSex2" value="Female">
+            </label>
+          </tr>
+        </table>
+        <button type="submit" class="btn login">
+          <%= subTitle%>
+        </button>
+
+      </form>
+
+    </div>
+
+  </div>
+  <script src="/javascripts/popper.js"></script>
+  <script src="/javascripts/bootstrap.min.js"></script>
+  <script src="/javascripts/index.js"></script>
+</body>
+
+</html>

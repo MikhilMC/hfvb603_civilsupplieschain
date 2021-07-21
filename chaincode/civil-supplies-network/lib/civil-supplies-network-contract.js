@@ -383,6 +383,12 @@ class CivilSuppliesNetworkContract extends Contract {
 
       const buffer = Buffer.from(JSON.stringify(rationCard));
       await ctx.stub.putState(rationCardNumber, buffer);
+
+      let createRationCardEvent = {
+        Type: 'Creating a ration card',
+        RationCardNumber: rationCardNumber
+      }
+      await ctx.stub.setEvent('createRationCardEvent', Buffer.from(JSON.stringify(createRationCardEvent)));
     } else {
       logger.info('Users under the following MSP : ' +
         mspID + 'cannot perform this action');
@@ -449,6 +455,12 @@ class CivilSuppliesNetworkContract extends Contract {
       await ctx.stub.putState(rationCardDetails['rationRetailerId'], retailerBuffer);
 
       await ctx.stub.deleteState(rationCardNumber);
+
+      let deleteRationCardEvent = {
+        Type: 'Deleting a ration card',
+        RationCardNumber: rationCardNumber
+      }
+      await ctx.stub.setEvent('deleteRationCardEvent', Buffer.from(JSON.stringify(deleteRationCardEvent)));
     } else {
       logger.info('Users under the following MSP : ' +
         mspID + 'cannot perform this action');
@@ -497,6 +509,12 @@ class CivilSuppliesNetworkContract extends Contract {
 
       const buffer = Buffer.from(JSON.stringify(rationCardDetails));
       await ctx.stub.putState(rationCardNumber, buffer);
+
+      let shiftHouseInSameWardEvent = {
+        Type: 'Shifting house in same ward',
+        RationCardNumber: rationCardNumber
+      }
+      await ctx.stub.setEvent('shiftHouseInSameWardEvent', Buffer.from(JSON.stringify(shiftHouseInSameWardEvent)));
     } else {
       logger.info('Users under the following MSP : ' +
         mspID + 'cannot perform this action');
@@ -597,6 +615,12 @@ class CivilSuppliesNetworkContract extends Contract {
 
       const buffer = Buffer.from(JSON.stringify(rationCardDetails));
       await ctx.stub.putState(rationCardNumber, buffer);
+
+      let shiftHouseInSameLSGBodyEvent = {
+        Type: 'Shifting house in LSG body',
+        RationCardNumber: rationCardNumber
+      }
+      await ctx.stub.setEvent('shiftHouseInSameLSGBodyEvent', Buffer.from(JSON.stringify(shiftHouseInSameLSGBodyEvent)));
     } else {
       logger.info('Users under the following MSP : ' +
         mspID + 'cannot perform this action');
@@ -698,6 +722,12 @@ class CivilSuppliesNetworkContract extends Contract {
 
       const buffer = Buffer.from(JSON.stringify(rationCardDetails));
       await ctx.stub.putState(rationCardNumber, buffer);
+
+      let shiftHouseInSameTalukEvent = {
+        Type: 'Shifting house in same taluk',
+        RationCardNumber: rationCardNumber
+      }
+      await ctx.stub.setEvent('shiftHouseInSameTalukEvent', Buffer.from(JSON.stringify(shiftHouseInSameTalukEvent)));
     } else {
       logger.info('Users under the following MSP : ' +
         mspID + 'cannot perform this action');
@@ -812,7 +842,7 @@ class CivilSuppliesNetworkContract extends Contract {
       await ctx.stub.putState(rationCardNumber, buffer);
 
       let shiftFamilyToAnotherTalukEvent = {
-        Type: 'Shifting one family from one taluk to another',
+        Type: 'Shifting one house from one taluk to another',
         RationCardNumber: rationCardNumber
       }
       await ctx.stub.setEvent('shiftFamilyToAnotherTalukEvent', Buffer.from(JSON.stringify(shiftFamilyToAnotherTalukEvent)));
@@ -844,6 +874,12 @@ class CivilSuppliesNetworkContract extends Contract {
 
       const buffer = Buffer.from(JSON.stringify(rationCardDetails));
       await ctx.stub.putState(rationCardNumber, buffer);
+
+      let changeMobileNumberEvent = {
+        Type: 'Changing mobile number registered to a ration card',
+        RationCardNumber: rationCardNumber
+      }
+      await ctx.stub.setEvent('changeMobileNumberEvent', Buffer.from(JSON.stringify(changeMobileNumberEvent)));
     } else {
       logger.info('Users under the following MSP : ' +
         mspID + 'cannot perform this action');
@@ -884,6 +920,12 @@ class CivilSuppliesNetworkContract extends Contract {
 
       const buffer = Buffer.from(JSON.stringify(rationCardDetails));
       await ctx.stub.putState(rationCardNumber, buffer);
+
+      let changeElectricityConnectionStatusEvent = {
+        Type: 'Changing electricity connection status for a ration card',
+        RationCardNumber: rationCardNumber
+      }
+      await ctx.stub.setEvent('changeElectricityConnectionStatusEvent', Buffer.from(JSON.stringify(changeElectricityConnectionStatusEvent)));
     } else {
       logger.info('Users under the following MSP : ' +
         mspID + 'cannot perform this action');
@@ -1088,6 +1130,12 @@ class CivilSuppliesNetworkContract extends Contract {
 
       const consumberBuffer = Buffer.from(JSON.stringify(consumer));
       await ctx.stub.putState(consumerNumber, consumberBuffer);
+
+      let addConsumerEvent = {
+        Type: 'Adding a consumer to a ration card',
+        ConsumerNumber: consumerNumber
+      }
+      await ctx.stub.setEvent('addConsumerEvent', Buffer.from(JSON.stringify(addConsumerEvent)));
     } else {
       logger.info('Users under the following MSP : ' +
         mspID + 'cannot perform this action');
@@ -1243,6 +1291,12 @@ class CivilSuppliesNetworkContract extends Contract {
       await ctx.stub.putState(rationCardDetails['rationRetailerId'], retailerBuffer);
 
       await ctx.stub.deleteState(consumerNumber);
+
+      let deleteConsumerEvent = {
+        Type: 'Deleting a consumer',
+        ConsumerNumber: consumerNumber
+      }
+      await ctx.stub.setEvent('deleteConsumerEvent', Buffer.from(JSON.stringify(deleteConsumerEvent)));
     } else {
       logger.info('Users under the following MSP : ' +
         mspID + 'cannot perform this action');
@@ -1364,6 +1418,12 @@ class CivilSuppliesNetworkContract extends Contract {
 
       const consumberBuffer = Buffer.from(JSON.stringify(consumer));
       await ctx.stub.putState(consumerNumber, consumberBuffer);
+
+      let updateConsumerPersonalDetailsEvent = {
+        Type: "Updating a consumer's personal details",
+        ConsumerNumber: consumerNumber
+      }
+      await ctx.stub.setEvent('updateConsumerPersonalDetailsEvent', Buffer.from(JSON.stringify(updateConsumerPersonalDetailsEvent)));
     } else {
       logger.info('Users under the following MSP : ' +
         mspID + 'cannot perform this action');
@@ -1454,6 +1514,12 @@ class CivilSuppliesNetworkContract extends Contract {
 
       const consumberBuffer = Buffer.from(JSON.stringify(consumer));
       await ctx.stub.putState(consumerNumber, consumberBuffer);
+
+      let updateConsumerProfessionalDetailsEvent = {
+        Type: "Updating a consumer's professional details",
+        ConsumerNumber: consumerNumber
+      }
+      await ctx.stub.setEvent('updateConsumerProfessionalDetailsEvent', Buffer.from(JSON.stringify(updateConsumerProfessionalDetailsEvent)));
     } else {
       logger.info('Users under the following MSP : ' +
         mspID + 'cannot perform this action');
@@ -2007,6 +2073,12 @@ class CivilSuppliesNetworkContract extends Contract {
 
       const buffer = Buffer.from(JSON.stringify(asset));
       await ctx.stub.putState(retailerPurchaseNumber, buffer);
+
+      let retailerFoodItemsPurchaseEvent = {
+        Type: 'Ration retailer purchasing a food item for the distribution',
+        RetailerPurchaseNumber: retailerPurchaseNumber
+      }
+      await ctx.stub.setEvent('retailerFoodItemsPurchaseEvent', Buffer.from(JSON.stringify(retailerFoodItemsPurchaseEvent)));
     } else {
       logger.info('Users under the following MSP : ' +
         mspID + 'cannot perform this action');
@@ -2057,6 +2129,12 @@ class CivilSuppliesNetworkContract extends Contract {
 
       const buffer = Buffer.from(JSON.stringify(asset));
       await ctx.stub.putState(retailerPurchaseNumber, buffer);
+
+      let retailerKerosinePurchaseEvent = {
+        Type: 'Ration retailer purchasing kerosine for the distribution',
+        RetailerPurchaseNumber: retailerPurchaseNumber
+      }
+      await ctx.stub.setEvent('retailerKerosinePurchaseEvent', Buffer.from(JSON.stringify(retailerKerosinePurchaseEvent)));
     } else {
       logger.info('Users under the following MSP : ' +
         mspID + 'cannot perform this action');
@@ -2093,6 +2171,12 @@ class CivilSuppliesNetworkContract extends Contract {
       }
 
       await ctx.stub.deleteState(retailerPurchaseNumber);
+
+      let deleteRetailerPurchaseEvent = {
+        Type: 'Deleting ration retailer purchase record',
+        RetailerPurchaseNumber: retailerPurchaseNumber
+      }
+      await ctx.stub.setEvent('deleteRetailerPurchaseEvent', Buffer.from(JSON.stringify(deleteRetailerPurchaseEvent)));
     } else {
       logger.info('Users under the following MSP : ' +
         mspID + 'cannot perform this action');
@@ -2188,6 +2272,12 @@ class CivilSuppliesNetworkContract extends Contract {
 
       const buffer = Buffer.from(JSON.stringify(asset));
       await ctx.stub.putState(consumerPurchaseNumber, buffer);
+
+      let consumerPurchaseEvent = {
+        Type: 'Consumer purchasing any item',
+        ConsumerPurchaseNumber: consumerPurchaseNumber
+      }
+      await ctx.stub.setEvent('consumerPurchaseEvent', Buffer.from(JSON.stringify(consumerPurchaseEvent)));
     } else {
       logger.info('Users under the following MSP : ' +
         mspID + 'cannot perform this action');

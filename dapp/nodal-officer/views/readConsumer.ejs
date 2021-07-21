@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>
+    <%=title%>
+  </title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link rel="stylesheet" href="/stylesheets/bootstrap.min.css" />
+  <link rel='stylesheet' href='/stylesheets/dashboard.css' />
+</head>
+
+<body>
+  <h1>
+    <%= title%>
+  </h1>
+  <div class="form-modal">
+
+    <div id="man-form">
+      <h3>
+        <%= subTitle%>
+      </h3>
+      <table id="man-form">
+        <thead>
+          <tr>
+            <th scope="col">FIELD</th>
+            <th scope="col">VALUE</th>
+          </tr>
+        </thead>
+        <tr>
+          <th scope="row">CONSUMER NUMBER</th>
+          <td><%=consumerNumber%></td>
+        </tr>
+        <tr>
+          <th scope="row">NAME</th>
+          <td><%=name%></td>
+        </tr>
+        <tr>
+          <th scope="row">AGE</th>
+          <td><%=age%></td>
+        </tr>
+        <tr>
+          <th scope="row">SEX</th>
+          <td><%=sex%></td>
+        </tr>
+        <tr>
+          <th scope="row">OCCUPATION</th>
+          <td><%=occupation%></td>
+        </tr>
+        <tr>
+          <th scope="row">INDIVIDUAL INCOME</th>
+          <td><%=individualIncome%></td>
+        </tr>
+        <tr>
+          <th scope="row">RATION CARD ID</th>
+          <td><%=rationCardNumber%></td>
+        </tr>
+        <tr>
+          <th scope="row">NODAL OFFICER ID</th>
+          <td><%=nodalOfficerId%></td>
+        </tr>
+        <tr>
+          <th scope="row">RATION RETAILER ID</th>
+          <td><%=rationRetailerId%></td>
+        </tr>
+        <tr>
+          <th scope="row">IS CONSUMER HEAD OF THE FAMILY <HEAD></HEAD></th>
+          <td><%=isFamilyHead? 'YES': 'NO';%></td>
+        </tr>
+      </table>
+
+    </div>
+
+  </div>
+  <script src="/javascripts/popper.js"></script>
+  <script src="/javascripts/bootstrap.min.js"></script>
+  <script src="/javascripts/index.js"></script>
+</body>
+
+</html>

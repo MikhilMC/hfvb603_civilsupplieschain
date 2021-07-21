@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>
+    <%=title%>
+  </title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link rel="stylesheet" href="/stylesheets/bootstrap.min.css" />
+  <link rel='stylesheet' href='/stylesheets/dashboard.css' />
+</head>
+
+<body>
+  <h1>
+    <%= title%>
+  </h1>
+  <div class="form-modal">
+
+    <div id="man-form">
+      <h3>
+        <%= subTitle%>
+      </h3>
+      <form id="manform" action="/deleteRationCard/submit" method="POST" onsubmit="return validateDeleteRationCardForm();">
+        <table>
+
+          <input name="rationCardNumber" id="rationCardNumber" class="form-control" type="text"
+            placeholder="Enter Ration Card Number" />
+        </table>
+        <button type="submit" class="btn login fs-5 fw-bold mt-3">
+          <%= subTitle%>
+        </button>
+
+      </form>
+
+    </div>
+
+
+
+    <br>
+
+  </div>
+  <script src="/javascripts/popper.js"></script>
+  <script src="/javascripts/bootstrap.min.js"></script>
+  <script src="/javascripts/index.js"></script>
+</body>
+
+</html>

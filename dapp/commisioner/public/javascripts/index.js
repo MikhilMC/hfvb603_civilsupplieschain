@@ -15,7 +15,7 @@ function validateCreateNodalOfficerForm() {
     district.placeholder = 'Field can not be empty';
     district.style.border ="1px solid red";
   } else {
-    nodalOfficerId.style.border ="1px solid black";
+    district.style.border ="1px solid black";
     console.log(district.value);
   }
 
@@ -23,7 +23,7 @@ function validateCreateNodalOfficerForm() {
     taluk.placeholder = 'Field can not be empty';
     taluk.style.border ="1px solid red";
   } else {
-    nodalOfficerId.style.border ="1px solid black";
+    taluk.style.border ="1px solid black";
     console.log(taluk.value);
   }
 
@@ -97,6 +97,77 @@ function validateReadRationRetailerForm() {
   }
 
   return validateTextBox(rationRetailerId.value);
+}
+
+function validateShiftFamilyToAnotherTalukForm() {
+  let rationCardNumber = document.querySelector('#rationCardNumber');
+  let newHouseNumber = document.querySelector('#newHouseNumber');
+  let newRationRetailerId = document.querySelector('#newRationRetailerId');
+  let newElectricity1 = document.querySelector('#newElectricity1');
+  let newElectricity2 = document.querySelector('#newElectricity2');
+
+  if (!validateTextBox(rationCardNumber.value)) {
+    rationCardNumber.placeholder = 'Field can not be empty';
+    rationCardNumber.style.border ="1px solid red";
+  } else {
+    rationCardNumber.style.border ="1px solid black";
+    console.log(rationCardNumber.value);
+  }
+
+  if (!validateTextBox(newHouseNumber.value)) {
+    newHouseNumber.placeholder = 'Field can not be empty';
+    newHouseNumber.style.border ="1px solid red";
+  } else {
+    newHouseNumber.style.border ="1px solid black";
+    console.log(newHouseNumber.value);
+  }
+
+  if (!validateTextBox(newRationRetailerId.value)) {
+    newRationRetailerId.placeholder = 'Field can not be empty';
+    newRationRetailerId.style.border ="1px solid red";
+  } else {
+    newRationRetailerId.style.border ="1px solid black";
+    console.log(newRationRetailerId.value);
+  }
+
+  if (!(newElectricity1.checked || newElectricity2.checked)) {
+    alert('Please select the electricity connection status!!!');
+    return false;
+  } else {
+    if (newElectricity1.checked === true) {
+      console.log('yes');
+    } else {
+      console.log('no');
+    }
+  }
+
+  return validateTextBox(rationCardNumber.value) &&
+    validateTextBox(newHouseNumber.value) &&
+    validateTextBox(newRationRetailerId.value) &&
+    (newElectricity1.checked || newElectricity2.checked);
+}
+
+function validateShiftConsumerToAnotherRationCardForm() {
+  let consumerNumber = document.querySelector('#consumerNumber');
+  let newRationRetailerId = document.querySelector('#newRationRetailerId');
+
+  if (!validateTextBox(consumerNumber.value)) {
+    consumerNumber.placeholder = 'Field can not be empty';
+    consumerNumber.style.border ="1px solid red";
+  } else {
+    consumerNumber.style.border ="1px solid black";
+    console.log(consumerNumber.value);
+  }
+
+  if (!validateTextBox(newRationRetailerId.value)) {
+    newRationRetailerId.placeholder = 'Field can not be empty';
+    newRationRetailerId.style.border ="1px solid red";
+  } else {
+    newRationRetailerId.style.border ="1px solid black";
+    console.log(newRationRetailerId.value);
+  }
+
+  return validateTextBox(consumerNumber.value) && validateTextBox(newRationRetailerId.value);
 }
 
 function validateTextBox(value) {

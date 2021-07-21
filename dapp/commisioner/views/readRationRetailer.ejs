@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>
+    <%=title%>
+  </title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link rel="stylesheet" href="/stylesheets/bootstrap.min.css" />
+  <link rel='stylesheet' href='/stylesheets/dashboard.css' />
+</head>
+
+<body>
+  <h1>
+    <%= title%>
+  </h1>
+  <div class="form-modal">
+
+    <div id="man-form">
+      <h3>
+        <%= subTitle%>
+      </h3>
+      <table id="man-form">
+        <thead>
+          <tr>
+            <th scope="col">FIELD</th>
+            <th scope="col">VALUE</th>
+          </tr>
+        </thead>
+        <tr>
+          <th scope="row">RATION RETAILER ID</th>
+          <td><%=rationRetailerId%></td>
+        </tr>
+        <tr>
+          <th scope="row">NODAL OFFICER ID</th>
+          <td><%=nodalOfficerId%></td>
+        </tr>
+        <tr>
+          <th scope="row">LSG BODY</th>
+          <td><%=LSGBody%></td>
+        </tr>
+        <tr>
+          <th scope="row">WARD NUMBER</th>
+          <td><%=wardNumber%></td>
+        </tr>
+        <tr>
+          <th scope="row">YELLOW CARD FAMILIES</th>
+          <td><%=yellowCardFamilies%></td>
+        </tr>
+        <tr>
+          <th scope="row">YELLOW CARD CONSUMERS</th>
+          <td><%=yellowCardConsumers%></td>
+        </tr>
+        <tr>
+          <th scope="row">PINK CARD CONSUMERS</th>
+          <td><%=pinkCardConsumers%></td>
+        </tr>
+        <tr>
+          <th scope="row">BLUE CARD CONSUMERS</th>
+          <td><%=blueCardConsumers%></td>
+        </tr>
+        <tr>
+          <th scope="row">WHITE CARD CONSUMERS</th>
+          <td><%=whiteCardConsumers%></td>
+        </tr>
+        <tr>
+          <th scope="row">ELECTRIFIED HOMES</th>
+          <td><%=electrifiedHomes%></td>
+        </tr>
+        <tr>
+          <th scope="row">NON-ELECTRIFIED HOMES</th>
+          <td><%=nonElectrifiedHomes%></td>
+        </tr>
+      </table>
+
+    </div>
+
+  </div>
+  <script src="/javascripts/popper.js"></script>
+  <script src="/javascripts/bootstrap.min.js"></script>
+  <script src="/javascripts/index.js"></script>
+</body>
+
+</html>

@@ -4,8 +4,11 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
+const { EventListner } = require('./routes/Events')
+
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+var makeRetailerFoodPurchase = require('./routes/makeRetailerFoodPurchase');
 
 var app = express();
 
@@ -21,6 +24,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/makeRetailerFoodPurchase', makeRetailerFoodPurchase);
+
+let RationRetailerEvent = new EventListner();
+RationRetailerEvent.setRoleAndIdentity('ration_retailer', 'rationRetailerAdmin');
+RationRetailerEvent.initChannelAndChaincode('civilsupplieschannel', 'civil-supplies-network');
+
+RationRetailerEvent.contractEventListner('RationRetailerListener1', 'retailerFoodItemsPurchaseEvent');
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

@@ -1,11 +1,50 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
-  </head>
-  <body>
-    <h1><%= title %></h1>
-    <p>Welcome to <%= title %></p>
-  </body>
+
+<head>
+  <title>
+    <%= title %>
+  </title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link rel="stylesheet" href="/stylesheets/bootstrap.min.css" />
+  <link rel='stylesheet' href='/stylesheets/dashboard.css' />
+</head>
+
+<body>
+  <!-- <h1><%= title %></h1>
+    <p>Welcome to <%= title %></p> -->
+  <div class="container row mt-5 ml-5 d-flex align-items-center justify-content-center">
+    <div class="col-lg-4 col-md-4 mx-auto">
+      <div class="card text-center border-primary rounded my-3">
+        <h5 class="card-header border-primary bg-primary text-light"><strong>RATION RETAILER ACTIVITY</strong></h5>
+        <div class="card-body">
+          <p class="card-title">FOR MAKING A RETAILER FOOD ITEMS PURCHASE, CLICK</p>
+          <a href="/makeRetailerFoodPurchase" class="btn btn-primary">HERE</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4 col-md-4 mx-auto">
+      <div class="card text-center border-primary rounded my-3">
+        <h5 class="card-header border-primary bg-primary text-light"><strong>RATION RETAILER ACTIVITY</strong></h5>
+        <div class="card-body">
+          <p class="card-title">FOR MAKING A RETAILER KEROSINE PURCHASE, CLICK</p>
+          <a href="/makeRetailerKerosinePurchase" class="btn btn-primary">HERE</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4 col-md-4 mx-auto">
+      <div class="card text-center border-primary rounded my-3">
+        <h5 class="card-header border-primary bg-primary text-light"><strong>RATION RETAILER ACTIVITY</strong></h5>
+        <div class="card-body">
+          <p class="card-title">FOR MAKING A CONSUMER PURCHASE, CLICK</p>
+          <a href="/makeConsumerPurchase" class="btn btn-primary">HERE</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="/javascripts/popper.js"></script>
+  <script src="/javascripts/bootstrap.min.js"></script>
+</body>
+
 </html>

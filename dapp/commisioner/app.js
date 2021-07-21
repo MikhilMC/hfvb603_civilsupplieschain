@@ -11,6 +11,7 @@ var usersRouter = require('./routes/users');
 var createNodalOfficer = require('./routes/createNodalOfficer');
 var readNodalOfficer = require('./routes/readNodalOfficer');
 var createRationRetailer = require('./routes/createRationRetailer');
+var readRationRetailer = require('./routes/readRationRetailer');
 var shiftFamilyToAnotherTaluk = require('./routes/shiftFamilyToAnotherTaluk');
 var shiftConsumerToAnotherRationCard = require('./routes/shiftConsumerToAnotherRationCard');
 
@@ -31,6 +32,7 @@ app.use('/users', usersRouter);
 app.use('/createNodalOfficer', createNodalOfficer);
 app.use('/readNodalOfficer', readNodalOfficer);
 app.use('/createRationRetailer', createRationRetailer);
+app.use('/readRationRetailer', readRationRetailer);
 app.use('/shiftFamilyToAnotherTaluk', shiftFamilyToAnotherTaluk);
 app.use('/shiftConsumerToAnotherRationCard', shiftConsumerToAnotherRationCard);
 
@@ -40,7 +42,7 @@ CommisionerEvent.initChannelAndChaincode('civilsupplieschannel', 'civil-supplies
 
 CommisionerEvent.contractEventListner('CommisionerListener1', 'createNodalOfficerEvent');
 CommisionerEvent.contractEventListner('CommisionerListener2', 'createRationRetailerEvent');
-// CommisionerEvent.contractEventListner('CommisionerListener3', 'shiftFamilyToAnotherTalukEvent');
+CommisionerEvent.contractEventListner('CommisionerListener3', 'shiftFamilyToAnotherTalukEvent');
 // CommisionerEvent.contractEventListner('CommisionerListener4', 'shiftConsumerToAnotherFamilyEvent');
 
 // catch 404 and forward to error handler

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>
+    <%=title%>
+  </title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link rel="stylesheet" href="/stylesheets/bootstrap.min.css" />
+  <link rel='stylesheet' href='/stylesheets/dashboard.css' />
+</head>
+
+<body>
+  <h1>
+    <%= title%>
+  </h1>
+  <div class="form-modal">
+
+    <div id="man-form">
+      <h3>
+        <%= subTitle1%>
+      </h3>
+      <form id="manform" action="/createRationCard/submit" method="POST"
+        onsubmit="return validateCreateRationCardForm();">
+        <table>
+          <tr>
+            <input name="rationCardNumber1" id="rationCardNumber1" class="form-control" type="text"
+              placeholder="Enter Ration Card Number" />
+          </tr>
+          <tr>
+            <input name="rationRetailerId" id="rationRetailerId" class="form-control" type="text" placeholder="Enter Ration Retailer ID" />
+          </tr>
+          <tr>
+            <input name="houseNumber" id="houseNumber" class="form-control" type="text" placeholder="Enter House Number" />
+          </tr>
+          <tr>
+            Electricity Connection
+            <label class="form-check-label" for="electricity1">
+              Yes<input type="radio" class="form-check-input" name="isHomeElectrified" id="electricity1" value="yes">
+            </label>
+            <label class="form-check-label" for="electricity2">
+              No<input type="radio" class="form-check-input" name="isHomeElectrified" id="electricity2" value="no">
+            </label>
+          </tr>
+          <tr>
+            <input name="mobileNumber" id="mobileNumber" class="form-control" type="text" placeholder="Enter Mobile Number" />
+          </tr>
+        </table>
+        <button type="submit" class="btn login">
+          <%= subTitle1%>
+        </button>
+
+      </form>
+
+    </div>
+
+    <div class="form-modal">
+
+      <div id="man-form">
+        <h3>
+          <%= subTitle2%>
+        </h3>
+        <form id="manform" action="/readRationCard" method="POST" onsubmit="return validateReadRationCardForm();">
+          <table>
+
+            <input name="rationCardNumber2" id="rationCardNumber2" class="form-control" type="text"
+              placeholder="Enter Ration Card Number" />
+          </table>
+          <button type="submit" class="btn login fs-5 fw-bold mt-3">
+            <%= subTitle2%>
+          </button>
+
+        </form>
+
+      </div>
+
+
+      <br>
+
+    </div>
+    <script src="/javascripts/popper.js"></script>
+    <script src="/javascripts/bootstrap.min.js"></script>
+    <script src="/javascripts/index.js"></script>
+</body>
+
+</html>
