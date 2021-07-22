@@ -10,6 +10,7 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var makeRetailerFoodPurchase = require('./routes/makeRetailerFoodPurchase');
 var makeRetailerKerosinePurchase = require('./routes/makeRetailerKerosinePurchase');
+var readReatailerPurchase = require('./routes/readRetailerPurchase');
 var makeConsumerPurchase = require('./routes/makeConsumerPurchase');
 
 var app = express();
@@ -28,6 +29,7 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/makeRetailerFoodPurchase', makeRetailerFoodPurchase);
 app.use('/makeRetailerKerosinePurchase', makeRetailerKerosinePurchase);
+app.use('/readRetailerPurchase', readReatailerPurchase);
 app.use('/makeConsumerPurchase', makeConsumerPurchase);
 
 
