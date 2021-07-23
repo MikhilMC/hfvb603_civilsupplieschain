@@ -59,6 +59,118 @@ class CivilSuppliesNetworkContract extends Contract {
     }
   }
 
+  determinePurchaseDetails(cardColour, foodItem, consumers) {
+    if (cardColour === 'Yellow' && foodItem === 'Rice') {
+      return {
+        totalQuantity: consumers * 30,
+        isDistributedIndividually: false,
+        overallQuantity: 30,
+        individualQuantity: 0,
+        pricePerQuantity: 0,
+        basicUnit: 'Kg'
+      }
+    } else if (cardColour === 'Yellow' && foodItem === 'Wheat') {
+      return {
+        totalQuantity: consumers * 5,
+        isDistributedIndividually: false,
+        overallQuantity: 5,
+        individualQuantity: 0,
+        pricePerQuantity: 0,
+        basicUnit: 'Kg'
+      }
+    } else if (cardColour === 'Yellow' && foodItem === 'Sugar') {
+      return {
+        totalQuantity: consumers * 0.4,
+        isDistributedIndividually: true,
+        overallQuantity: 0,
+        individualQuantity: 0.4,
+        pricePerQuantity: 13.5,
+        basicUnit: 'Kg'
+      }
+    } else if (cardColour === 'Pink' && foodItem === 'Rice') {
+      return {
+        totalQuantity: consumers * 4,
+        isDistributedIndividually: true,
+        overallQuantity: 0,
+        individualQuantity: 4,
+        pricePerQuantity: 2,
+        basicUnit: 'Kg'
+      }
+    } else if (cardColour === 'Pink' && foodItem === 'Wheat') {
+      return {
+        totalQuantity: consumers * 1,
+        isDistributedIndividually: true,
+        overallQuantity: 0,
+        individualQuantity: 1,
+        pricePerQuantity: 2,
+        basicUnit: 'Kg'
+      }
+    } else if (cardColour === 'Pink' && foodItem === 'Sugar') {
+      return {
+        totalQuantity: consumers * 0.4,
+        isDistributedIndividually: true,
+        overallQuantity: 0,
+        individualQuantity: 0.4,
+        pricePerQuantity: 13.5,
+        basicUnit: 'Kg'
+      }
+    } else if (cardColour === 'Blue' && foodItem === 'Rice') {
+      return {
+        totalQuantity: consumers * 2,
+        isDistributedIndividually: true,
+        overallQuantity: 0,
+        individualQuantity: 2,
+        pricePerQuantity: 4,
+        basicUnit: 'Kg'
+      }
+    } else if (cardColour === 'Blue' && foodItem === 'Wheat') {
+      return {
+        totalQuantity: consumers * 2,
+        isDistributedIndividually: true,
+        overallQuantity: 0,
+        individualQuantity: 2,
+        pricePerQuantity: 6.5,
+        basicUnit: 'Kg'
+      }
+    } else if (cardColour === 'Blue' && foodItem === 'Fortified Atta') {
+      return {
+        totalQuantity: consumers * 2,
+        isDistributedIndividually: true,
+        overallQuantity: 0,
+        individualQuantity: 2,
+        pricePerQuantity: 17,
+        basicUnit: 'Kg'
+      }
+    } else if (cardColour === 'White' && foodItem === 'Rice') {
+      return {
+        totalQuantity: consumers * 2,
+        isDistributedIndividually: true,
+        overallQuantity: 0,
+        individualQuantity: 2,
+        pricePerQuantity: 11,
+        basicUnit: 'Kg'
+      }
+    } else if (cardColour === 'White' && foodItem === 'Wheat') {
+      return {
+        totalQuantity: consumers * 2,
+        isDistributedIndividually: true,
+        overallQuantity: 0,
+        individualQuantity: 2,
+        pricePerQuantity: 6.5,
+        basicUnit: 'Kg'
+      }
+    } else if (cardColour === 'White' && foodItem === 'Fortified Atta') {
+      return {
+        totalQuantity: consumers * 2,
+        isDistributedIndividually: true,
+        overallQuantity: 0,
+        individualQuantity: 2,
+        pricePerQuantity: 17,
+        basicUnit: 'Kg'
+      }
+    }
+  }
+
   // nodalOfficerExists
   // @param: nodalOfficerId
   async nodalOfficerExists(ctx, nodalOfficerId) {
@@ -89,7 +201,7 @@ class CivilSuppliesNetworkContract extends Contract {
 
       const buffer = Buffer.from(JSON.stringify(asset));
       await ctx.stub.putState(nodalOfficerId, buffer);
-      
+
       let createNodalOfficerEvent = {
         Type: 'Creating a nodal officer',
         NodalOfficerID: nodalOfficerId
@@ -1771,7 +1883,7 @@ class CivilSuppliesNetworkContract extends Contract {
               break;
           }
         }
-        
+
         console.log(currentRetailer);
 
         const currentRetailerBuffer = Buffer.from(JSON.stringify(currentRetailer));
@@ -1979,80 +2091,35 @@ class CivilSuppliesNetworkContract extends Contract {
 
       const retailerDetails = await this.readRationRetailer(ctx, rationRetailerId);
 
-      const purchaseDetails = {};
-      if (rationCardColour === 'Yellow' && itemName === 'Rice') {
-        purchaseDetails['totalQuantity'] = retailerDetails['yellowCardFamilies'] * 30;
-        purchaseDetails['isDistributedIndividually'] = false;
-        purchaseDetails['overallQuantity'] = 30;
-        purchaseDetails['pricePerQuantity'] = 0;
-        purchaseDetails['basicUnit'] = 'Kg';
-      } else if (rationCardColour === 'Yellow' && itemName === 'Wheet') {
-        purchaseDetails['totalQuantity'] = retailerDetails['yellowCardFamilies'] * 5;
-        purchaseDetails['isDistributedIndividually'] = false;
-        purchaseDetails['overallQuantity'] = 5;
-        purchaseDetails['pricePerQuantity'] = 0;
-        purchaseDetails['basicUnit'] = 'Kg';
-      } else if (rationCardColour === 'Yellow' && itemName === 'Sugar') {
-        purchaseDetails['totalQuantity'] = retailerDetails['yellowCardConsumers'] * 0.4;
-        purchaseDetails['isDistributedIndividually'] = true;
-        purchaseDetails['individualQuantity'] = 0.4;
-        purchaseDetails['pricePerQuantity'] = 13.5;
-        purchaseDetails['basicUnit'] = 'Kg';
-      } else if (rationCardColour === 'Pink' && itemName === 'Rice') {
-        purchaseDetails['totalQuantity'] = retailerDetails['pinkCardConsumers'] * 4;
-        purchaseDetails['isDistributedIndividually'] = true;
-        purchaseDetails['individualQuantity'] = 4;
-        purchaseDetails['pricePerQuantity'] = 2;
-        purchaseDetails['basicUnit'] = 'Kg';
-      } else if (rationCardColour === 'Pink' && itemName === 'Wheet') {
-        purchaseDetails['totalQuantity'] = retailerDetails['pinkCardConsumers'] * 1;
-        purchaseDetails['isDistributedIndividually'] = true;
-        purchaseDetails['individualQuantity'] = 1;
-        purchaseDetails['pricePerQuantity'] = 2;
-        purchaseDetails['basicUnit'] = 'Kg';
-      } else if (rationCardColour === 'Pink' && itemName === 'Sugar') {
-        purchaseDetails['totalQuantity'] = retailerDetails['pinkCardConsumers'] * 0.4;
-        purchaseDetails['isDistributedIndividually'] = true;
-        purchaseDetails['individualQuantity'] = 0.4;
-        purchaseDetails['pricePerQuantity'] = 13.5;
-        purchaseDetails['basicUnit'] = 'Kg';
-      } else if (rationCardColour === 'Blue' && itemName === 'Rice') {
-        purchaseDetails['totalQuantity'] = retailerDetails['blueCardConsumers'] * 2;
-        purchaseDetails['isDistributedIndividually'] = true;
-        purchaseDetails['individualQuantity'] = 2;
-        purchaseDetails['basicUnit'] = 'Kg';
-        purchaseDetails['pricePerQuantity'] = 4;
-      } else if (rationCardColour === 'Blue' && itemName === 'Wheet') {
-        purchaseDetails['totalQuantity'] = retailerDetails['blueCardConsumers'] * 2;
-        purchaseDetails['isDistributedIndividually'] = true;
-        purchaseDetails['individualQuantity'] = 2;
-        purchaseDetails['basicUnit'] = 'Kg';
-        purchaseDetails['pricePerQuantity'] = 6.7;
-      } else if (rationCardColour === 'Blue' && itemName === 'Fortified Atta') {
-        purchaseDetails['totalQuantity'] = retailerDetails['blueCardConsumers'] * 2;
-        purchaseDetails['isDistributedIndividually'] = true;
-        purchaseDetails['individualQuantity'] = 2;
-        purchaseDetails['basicUnit'] = 'Kg';
-        purchaseDetails['pricePerQuantity'] = 17;
-      } else if (rationCardColour === 'White' && itemName === 'Rice') {
-        purchaseDetails['totalQuantity'] = retailerDetails['whiteCardConsumers'] * 2;
-        purchaseDetails['isDistributedIndividually'] = true;
-        purchaseDetails['individualQuantity'] = 2;
-        purchaseDetails['basicUnit'] = 'Kg';
-        purchaseDetails['pricePerQuantity'] = 10.9;
-      } else if (rationCardColour === 'White' && itemName === 'Wheet') {
-        purchaseDetails['totalQuantity'] = retailerDetails['whiteCardConsumers'] * 2;
-        purchaseDetails['isDistributedIndividually'] = true;
-        purchaseDetails['individualQuantity'] = 2;
-        purchaseDetails['basicUnit'] = 'Kg';
-        purchaseDetails['pricePerQuantity'] = 6.7;
-      } else if (rationCardColour === 'White' && itemName === 'Fortified Atta') {
-        purchaseDetails['totalQuantity'] = retailerDetails['whiteCardConsumers'] * 2;
-        purchaseDetails['isDistributedIndividually'] = true;
-        purchaseDetails['individualQuantity'] = 2;
-        purchaseDetails['basicUnit'] = 'Kg';
-        purchaseDetails['pricePerQuantity'] = 17;
+      let consumers;
+      switch (rationCardColour) {
+        case 'Yellow':
+          if (itemName === 'Sugar') {
+            consumers = retailerDetails['yellowCardConsumers'];
+          } else {
+            consumers = retailerDetails['yellowCardFamilies'];
+          }
+          break;
+        case 'Pink':
+          consumers = retailerDetails['pinkCardConsumers'];
+          break;
+        case 'Blue':
+          consumers = retailerDetails['blueCardConsumers'];
+          break;
+        case 'White':
+          consumers = retailerDetails['whiteCardConsumers'];
+          break;
+        default:
+          break;
       }
+
+      if (consumers === 0) {
+        throw new Error('The set of consumers for this order is empty');
+      }
+
+      let purchaseDetails = this.determinePurchaseDetails(rationCardColour, itemName, consumers);
+
+      console.log(purchaseDetails);
 
       const asset = {
         retailerPurchaseNumber,
@@ -2062,14 +2129,17 @@ class CivilSuppliesNetworkContract extends Contract {
         itemName,
         basicUnit: purchaseDetails['basicUnit'],
         isDistributedIndividually: purchaseDetails['isDistributedIndividually'],
-        overallQuantity: !purchaseDetails['isDistributedIndividually'] ? purchaseDetails.overallQuantity : 0,
-        individualQuantity: purchaseDetails['isDistributedIndividually'] ? purchaseDetails.individualQuantity : 0,
+        overallQuantity: purchaseDetails['overallQuantity'],
+        individualQuantity: purchaseDetails['individualQuantity'],
         pricePerQuantity: purchaseDetails['pricePerQuantity'],
         totalQuantity: purchaseDetails['totalQuantity'],
         presentQuantity: purchaseDetails['totalQuantity'],
         purchaseDate: Date(Date.now()),
-        dataType: 'Retailer Food Items Purchase'
+        dataType: 'Retailer Food Items Purchase',
+        purchaseStatus: 'Retailer purchase initiated'
       }
+
+      console.log(asset);
 
       const buffer = Buffer.from(JSON.stringify(asset));
       await ctx.stub.putState(retailerPurchaseNumber, buffer);
@@ -2124,8 +2194,11 @@ class CivilSuppliesNetworkContract extends Contract {
         totalQuantity,
         presentQuantity: totalQuantity,
         purchaseDate: Date(Date.now()),
-        dataType: 'Retailer Kerosine Purchase'
+        dataType: 'Retailer Kerosine Purchase',
+        purchaseStatus: 'Retailer purchase initiated'
       }
+
+      console.log(asset);
 
       const buffer = Buffer.from(JSON.stringify(asset));
       await ctx.stub.putState(retailerPurchaseNumber, buffer);
@@ -2228,6 +2301,10 @@ class CivilSuppliesNetworkContract extends Contract {
         throw new Error(`The Ration Card ${rationCardNumber} is not allowed to purchase using the Retailer Purchase ${retailerPurchaseNumber}.`)
       }
 
+      if (retailerPurchase['purchaseStatus'] === 'Retailer purchase closed') {
+        throw new Error(`The Consumer Purchase ${consumerPurchaseNumber} is closed.`);
+      }
+
       let quantity, pricePerQuantity, price;
       if (retailerPurchase['itemName'] === 'Kerosine') {
         if (rationCard['isHomeElectrified']) {
@@ -2261,14 +2338,18 @@ class CivilSuppliesNetworkContract extends Contract {
         dataType: 'Consumer Purchase'
       }
 
+      console.log(asset);
+
       retailerPurchase['presentQuantity'] -= quantity;
 
       if (retailerPurchase['presentQuantity'] === 0) {
-        await this.deleteRetailerPurchase(ctx, retailerPurchaseNumber);
-      } else {
-        const retailerPurchaseBuffer = Buffer.from(JSON.stringify(retailerPurchase));
-        await ctx.stub.putState(retailerPurchaseNumber, retailerPurchaseBuffer);
+        retailerPurchase['purchaseStatus'] = 'Retailer purchase closed'
       }
+
+      console.log(retailerPurchase);
+
+      const retailerPurchaseBuffer = Buffer.from(JSON.stringify(retailerPurchase));
+      await ctx.stub.putState(retailerPurchaseNumber, retailerPurchaseBuffer);
 
       const buffer = Buffer.from(JSON.stringify(asset));
       await ctx.stub.putState(consumerPurchaseNumber, buffer);
@@ -2297,6 +2378,35 @@ class CivilSuppliesNetworkContract extends Contract {
     const buffer = await ctx.stub.getState(consumerPurchaseNumber);
     const asset = JSON.parse(buffer.toString());
     return asset;
+  }
+
+  // deleteConsumerPurchase
+  // @param: consumerPurchaseNumber
+  async deleteConsumerPurchase(ctx, consumerPurchaseNumber) {
+    let logger = shim.newLogger('Chaincode --> ');
+    let CID = new shim.ClientIdentity(ctx.stub);
+    let mspID = CID.getMSPID();
+    logger.info('MSPID : ' + mspID);
+
+    if (mspID === 'RationRetailerMSP') {
+      const exists = await this.retailerPurchaseExist(ctx, consumerPurchaseNumber);
+      if (!exists) {
+        throw new Error(`The Retailer Purchase ${consumerPurchaseNumber} does not exist`);
+      }
+
+      await ctx.stub.deleteState(consumerPurchaseNumber);
+
+      let deleteConsumerPurchaseEvent = {
+        Type: 'Deleting ration retailer purchase record',
+        ConsumerPurchaseNumber: consumerPurchaseNumber
+      }
+      await ctx.stub.setEvent('deleteConsumerPurchaseEvent', Buffer.from(JSON.stringify(deleteConsumerPurchaseEvent)));
+    } else {
+      logger.info('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+      return ('Users under the following MSP : ' +
+        mspID + 'cannot perform this action');
+    }
   }
 
   // getNodalOfficers

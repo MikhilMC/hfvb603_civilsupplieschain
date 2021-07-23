@@ -36,14 +36,29 @@ app.use('/readRationRetailer', readRationRetailer);
 app.use('/shiftFamilyToAnotherTaluk', shiftFamilyToAnotherTaluk);
 app.use('/shiftConsumerToAnotherRationCard', shiftConsumerToAnotherRationCard);
 
-let CommisionerEvent = new EventListner();
-CommisionerEvent.setRoleAndIdentity('commisioner', 'commisionerAdmin');
-CommisionerEvent.initChannelAndChaincode('civilsupplieschannel', 'civil-supplies-network');
+let CommisionerEvent1 = new EventListner();
+CommisionerEvent1.setRoleAndIdentity('commisioner', 'commisionerAdmin');
+CommisionerEvent1.initChannelAndChaincode('civilsupplieschannel', 'civil-supplies-network');
+CommisionerEvent1.contractEventListner('CommisionerListener1', 'createNodalOfficerEvent')
+.catch(err => {});
 
-CommisionerEvent.contractEventListner('CommisionerListener1', 'createNodalOfficerEvent');
-CommisionerEvent.contractEventListner('CommisionerListener2', 'createRationRetailerEvent');
-CommisionerEvent.contractEventListner('CommisionerListener3', 'shiftFamilyToAnotherTalukEvent');
-// CommisionerEvent.contractEventListner('CommisionerListener4', 'shiftConsumerToAnotherFamilyEvent');
+let CommisionerEvent2 = new EventListner();
+CommisionerEvent2.setRoleAndIdentity('commisioner', 'commisionerAdmin');
+CommisionerEvent2.initChannelAndChaincode('civilsupplieschannel', 'civil-supplies-network');
+CommisionerEvent2.contractEventListner('CommisionerListener2', 'createRationRetailerEvent')
+.catch(err => {});
+
+let CommisionerEvent3 = new EventListner();
+CommisionerEvent3.setRoleAndIdentity('commisioner', 'commisionerAdmin');
+CommisionerEvent3.initChannelAndChaincode('civilsupplieschannel', 'civil-supplies-network');
+CommisionerEvent3.contractEventListner('CommisionerListener3', 'shiftFamilyToAnotherTalukEvent')
+.catch(err => {});
+
+let CommisionerEvent4 = new EventListner();
+CommisionerEvent4.setRoleAndIdentity('commisioner', 'commisionerAdmin');
+CommisionerEvent4.initChannelAndChaincode('civilsupplieschannel', 'civil-supplies-network');
+CommisionerEvent4.contractEventListner('CommisionerListener4', 'shiftConsumerToAnotherFamilyEvent')
+.catch(err => {});
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

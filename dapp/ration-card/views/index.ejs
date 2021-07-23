@@ -1,11 +1,99 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
-  </head>
-  <body>
-    <h1><%= title %></h1>
-    <p>Welcome to <%= title %></p>
-  </body>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>
+    <%=title%>
+  </title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link rel="stylesheet" href="/stylesheets/bootstrap.min.css" />
+  <link rel='stylesheet' href='/stylesheets/dashboard.css' />
+</head>
+
+<body>
+  <h1>
+    <%= title%>
+  </h1>
+  <div class="form-modal">
+
+    <div id="man-form">
+      <h3>
+        <%= subTitle1%>
+      </h3>
+      <form id="manform" action="/readRationCard" method="POST" onsubmit="return validateReadRationCardForm();">
+        <table>
+
+          <input name="rationCardNumber1" id="rationCardNumber1" class="form-control" type="text"
+            placeholder="Enter Ration Card Number" />
+        </table>
+        <button type="submit" class="btn login fs-5 fw-bold mt-3">
+          <%= subTitle1%>
+        </button>
+
+      </form>
+
+    </div>
+
+
+    <br>
+
+  </div>
+
+  <div class="form-modal">
+
+    <div id="man-form">
+      <h3>
+        <%= subTitle2%>
+      </h3>
+      <form id="manform" action="/readFamilyMembers" method="POST" onsubmit="return validateReadFamilyMembersForm();">
+        <table>
+
+          <input name="rationCardNumber2" id="rationCardNumber2" class="form-control" type="text"
+            placeholder="Enter Ration Card Number" />
+        </table>
+        <button type="submit" class="btn login fs-5 fw-bold mt-3">
+          <%= subTitle2%>
+        </button>
+
+      </form>
+
+    </div>
+
+
+    <br>
+
+  </div>
+
+  <div class="form-modal">
+
+    <div id="man-form">
+      <h3>
+        <%= subTitle3%>
+      </h3>
+      <form id="manform" action="/readFamilyPurchases" method="POST" onsubmit="return validateReadConsumerPurchasesForm();">
+        <table>
+
+          <input name="rationCardNumber3" id="rationCardNumber3" class="form-control" type="text"
+            placeholder="Enter Ration Card Number" />
+        </table>
+        <button type="submit" class="btn login fs-5 fw-bold mt-3">
+          <%= subTitle3%>
+        </button>
+
+      </form>
+
+    </div>
+
+
+    <br>
+
+  </div>
+  <script src="/javascripts/popper.js"></script>
+  <script src="/javascripts/bootstrap.min.js"></script>
+  <script src="/javascripts/index.js"></script>
+</body>
+
 </html>

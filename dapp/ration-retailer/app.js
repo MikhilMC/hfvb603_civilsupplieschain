@@ -12,6 +12,7 @@ var makeRetailerFoodPurchase = require('./routes/makeRetailerFoodPurchase');
 var makeRetailerKerosinePurchase = require('./routes/makeRetailerKerosinePurchase');
 var readReatailerPurchase = require('./routes/readRetailerPurchase');
 var makeConsumerPurchase = require('./routes/makeConsumerPurchase');
+var readConsumerPurchase = require('./routes/readConsumerPurchase')
 
 var app = express();
 
@@ -31,15 +32,26 @@ app.use('/makeRetailerFoodPurchase', makeRetailerFoodPurchase);
 app.use('/makeRetailerKerosinePurchase', makeRetailerKerosinePurchase);
 app.use('/readRetailerPurchase', readReatailerPurchase);
 app.use('/makeConsumerPurchase', makeConsumerPurchase);
+app.use('/readConsumerPurchase', readConsumerPurchase);
 
 
-let RationRetailerEvent = new EventListner();
-RationRetailerEvent.setRoleAndIdentity('ration_retailer', 'rationRetailerAdmin');
-RationRetailerEvent.initChannelAndChaincode('civilsupplieschannel', 'civil-supplies-network');
+let RationRetailerEvent1 = new EventListner();
+RationRetailerEvent1.setRoleAndIdentity('ration_retailer', 'rationRetailerAdmin');
+RationRetailerEvent1.initChannelAndChaincode('civilsupplieschannel', 'civil-supplies-network');
+RationRetailerEvent1.contractEventListner('RationRetailerListener1', 'retailerFoodItemsPurchaseEvent')
+.catch(err => {});
 
-RationRetailerEvent.contractEventListner('RationRetailerListener1', 'retailerFoodItemsPurchaseEvent');
-RationRetailerEvent.contractEventListner('RationRetailerListener2', 'retailerKerosinePurchaseEvent');
-RationRetailerEvent.contractEventListner('RationRetailerListener3', 'consumerPurchaseEvent');
+let RationRetailerEvent2 = new EventListner();
+RationRetailerEvent2.setRoleAndIdentity('ration_retailer', 'rationRetailerAdmin');
+RationRetailerEvent2.initChannelAndChaincode('civilsupplieschannel', 'civil-supplies-network');
+RationRetailerEvent2.contractEventListner('RationRetailerListener2', 'retailerKerosinePurchaseEvent')
+.catch(err => {});
+
+let RationRetailerEvent3 = new EventListner();
+RationRetailerEvent3.setRoleAndIdentity('ration_retailer', 'rationRetailerAdmin');
+RationRetailerEvent3.initChannelAndChaincode('civilsupplieschannel', 'civil-supplies-network');
+RationRetailerEvent3.contractEventListner('RationRetailerListener3', 'consumerPurchaseEvent')
+.catch(err => {});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

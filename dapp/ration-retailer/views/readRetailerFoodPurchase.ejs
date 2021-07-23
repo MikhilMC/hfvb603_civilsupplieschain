@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>
+    <%=title%>
+  </title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link rel="stylesheet" href="/stylesheets/bootstrap.min.css" />
+  <link rel='stylesheet' href='/stylesheets/dashboard.css' />
+</head>
+
+<body>
+  <h1>
+    <%= title%>
+  </h1>
+  <div class="form-modal">
+
+    <div id="man-form">
+      <h3>
+        <%= subTitle%>
+      </h3>
+      <table id="man-form">
+        <thead>
+          <tr>
+            <th scope="col">FIELD</th>
+            <th scope="col">VALUE</th>
+          </tr>
+        </thead>
+        <tr>
+          <th scope="row">RETAILER PURCHASE NUMBER</th>
+          <td><%=retailerPurchaseNumber%></td>
+        </tr>
+        <tr>
+          <th scope="row">NODAL OFFICER ID</th>
+          <td><%=nodalOfficerId%></td>
+        </tr>
+        <tr>
+          <th scope="row">RATION RETAILER ID</th>
+          <td><%=rationRetailerId%></td>
+        </tr>
+        <tr>
+          <th scope="row">ITEM NAME</th>
+          <td><%=itemName%></td>
+        </tr>
+        <tr>
+          <th scope="row">RATION CARD COLOUR</th>
+          <td><%=rationCardColour%></td>
+        </tr>
+        <tr>
+          <th scope="row">IS DISTRIBUTED INDIVIDUALLY</th>
+          <td><%=isDistributedIndividually? 'YES': 'NO'%></td>
+        </tr>
+        <tr>
+          <th scope="row"><%=isDistributedIndividually? 'INDIVIDUAL QUANTITY': 'OVERALL QUANTITY';%></th>
+          <td><%=isDistributedIndividually? individualQuantity: overallQuantity;%></td>
+        </tr>
+        <tr>
+          <th scope="row">PRICE PER QUANTITY</th>
+          <td><%=pricePerQuantity%></td>
+        </tr>
+        <tr>
+          <th scope="row">BASIC UNIT</th>
+          <td><%=basicUnit%></td>
+        </tr>
+        <tr>
+          <th scope="row">PURCHASE DATE</th>
+          <td><%=purchaseDate%></td>
+        </tr>
+        <tr>
+          <th scope="row">TOTAL QUANTITY</th>
+          <td><%=totalQuantity%></td>
+        </tr>
+        <tr>
+          <th scope="row">PRESENT QUANTITY</th>
+          <td><%=presentQuantity%></td>
+        </tr>
+        <tr>
+          <th scope="row">PURCHASE STATUS</th>
+          <td><%=purchaseStatus%></td>
+        </tr>
+      </table>
+
+    </div>
+
+  </div>
+  <script src="/javascripts/popper.js"></script>
+  <script src="/javascripts/bootstrap.min.js"></script>
+  <script src="/javascripts/index.js"></script>
+</body>
+
+</html>

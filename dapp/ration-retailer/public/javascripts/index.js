@@ -33,11 +33,30 @@ function validateMakeRetailerFoodPurchaseForm() {
   } else {
     console.log(itemName.value);
   }
+
+  console.log(
+    (rationCardColour.value === 'Yellow' && itemName.value ==='Fortified Atta') ||
+    (rationCardColour.value === 'Pink' && itemName.value === 'Fortified Atta') ||
+    (rationCardColour.value === 'Blue' && itemName.value === 'Sugar') ||
+    (rationCardColour.value === 'White' && itemName.value === 'Sugar')
+  )
+
+  if (
+    (rationCardColour.value === 'Yellow' && itemName.value ==='Fortified Atta') ||
+    (rationCardColour.value === 'Pink' && itemName.value === 'Fortified Atta') ||
+    (rationCardColour.value === 'Blue' && itemName.value === 'Sugar') ||
+    (rationCardColour.value === 'White' && itemName.value === 'Sugar')
+  ) {
+    
+    alert(`Combination of ration card colour as "${rationCardColour.value}", and item name as "${itemName.value}" is not available. Please select a valid option.`);
+    return false
+  } else {
+    return validateTextBox(retailerPurchaseNumber.value) &&
+      validateTextBox(rationRetailerId.value) &&
+      rationCardColour.value !== 'Select Ration Card Colour' &&
+      itemName.value !== 'Select Item Name';
+  }
   
-  return validateTextBox(retailerPurchaseNumber.value) &&
-    validateTextBox(rationRetailerId.value) &&
-    rationCardColour.value !== 'Select Ration Card Colour' &&
-    itemName.value !== 'Select Item Name';
 }
 
 function validateReadRetailerPurchase() {

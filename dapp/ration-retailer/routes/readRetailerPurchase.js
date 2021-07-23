@@ -20,20 +20,45 @@ readRetailerPurchase.post('/', (req, res) => {
     return JSON.parse(result);
   }).then(data => {
     console.log(data);
-    // res.render('readRetailerPurchase', {
-    //   title: 'NODAL OFFICER DASHBOARD',
-    //   subTitle: 'READ RATION CARD',
-    //   consumerNumber,
-    //   name: data['name'],
-    //   age: data['age'],
-    //   sex: data['sex'],
-    //   occupation: data['occupation'],
-    //   individualIncome: data['individualIncome'],
-    //   rationCardNumber: data['rationCardNumber'],
-    //   nodalOfficerId: data['nodalOfficerId'],
-    //   rationRetailerId: data['rationRetailerId'],
-    //   isFamilyHead: data['isFamilyHead']
-    // });
+    if (data['dataType'] === 'Retailer Food Items Purchase') {
+      res.render('readRetailerFoodPurchase', {
+        title: 'RATION RETAILER DASHBOARD',
+        subTitle: 'READ RATION RETAILER FOOD ITEMS PURHCASE',
+        retailerPurchaseNumber,
+        nodalOfficerId: data['nodalOfficerId'],
+        rationRetailerId: data['rationRetailerId'],
+        itemName: data['itemName'],
+        rationCardColour: data['rationCardColour'],
+        isDistributedIndividually: data['isDistributedIndividually'],
+        individualQuantity: data['individualQuantity'],
+        overallQuantity: data['overallQuantity'],
+        pricePerQuantity: data['pricePerQuantity'],
+        basicUnit: data['basicUnit'],
+        purchaseDate: data['purchaseDate'],
+        totalQuantity: data['totalQuantity'],
+        presentQuantity: data['presentQuantity'],
+        purchaseStatus: data['purchaseStatus']
+      });
+    } else {
+      res.render('readRetailerKerosinePurchase', {
+        title: 'RATION RETAILER DASHBOARD',
+        subTitle: 'READ RATION RETAILER KEROSINE PURHCASE',
+        retailerPurchaseNumber,
+        nodalOfficerId: data['nodalOfficerId'],
+        rationRetailerId: data['rationRetailerId'],
+        itemName: data['itemName'],
+        isDistributedIndividually: data['isDistributedIndividually'],
+        electrifiedHomesQuantity: data['electrifiedHomesQuantity'],
+        electrifiedHomesPricePerQuantity: data['electrifiedHomesPricePerQuantity'],
+        nonElectrifiedHomesPricePerQuantity: data['nonElectrifiedHomesPricePerQuantity'],
+        nonElectrifiedHomesQuantity: data['nonElectrifiedHomesQuantity'],
+        basicUnit: data['basicUnit'],
+        purchaseDate: data['purchaseDate'],
+        totalQuantity: data['totalQuantity'],
+        presentQuantity: data['presentQuantity'],
+        purchaseStatus: data['purchaseStatus']
+      });
+    }
   })
 });
 

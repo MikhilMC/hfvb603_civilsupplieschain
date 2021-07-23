@@ -52,22 +52,71 @@ app.use('/updatePersonalDetails', updatePersonalDetails);
 app.use('/updateProfessionalDetails', updateProfessionalDetails);
 
 
-let NodalOfficerEvent = new EventListner();
-NodalOfficerEvent.setRoleAndIdentity('nodal_officer', 'admin');
-NodalOfficerEvent.initChannelAndChaincode('civilsupplieschannel', 'civil-supplies-network');
+let NodalOfficerEvent1 = new EventListner();
+NodalOfficerEvent1.setRoleAndIdentity('nodal_officer', 'admin');
+NodalOfficerEvent1.initChannelAndChaincode('civilsupplieschannel', 'civil-supplies-network');
+NodalOfficerEvent1.contractEventListner('NodalOfficerListener1', 'createRationCardEvent')
+.catch(err => {});
 
-NodalOfficerEvent.contractEventListner('NodalOfficerListener1', 'createRationCardEvent');
-NodalOfficerEvent.contractEventListner('NodalOfficerListener2', 'deleteRationCardEvent');
-NodalOfficerEvent.contractEventListner('NodalOfficerListener3', 'addConsumerEvent');
-NodalOfficerEvent.contractEventListner('NodalOfficerListener4', 'deleteConsumerEvent');
-NodalOfficerEvent.contractEventListner('NodalOfficerListener5', 'shiftHouseInSameWardEvent');
-NodalOfficerEvent.contractEventListner('NodalOfficerListener6', 'shiftHouseInSameLSGBodyEvent');
-NodalOfficerEvent.contractEventListner('NodalOfficerListener7', 'shiftHouseInSameTalukEvent');
-NodalOfficerEvent.contractEventListner('NodalOfficerListener8', 'changeMobileNumberEvent');
-NodalOfficerEvent.contractEventListner('NodalOfficerListener9', 'changeElectricityConnectionStatusEvent');
-NodalOfficerEvent.contractEventListner('NodalOfficerListener10', 'updateConsumerPersonalDetailsEvent');
-NodalOfficerEvent.contractEventListner('NodalOfficerListener11', 'updateConsumerProfessionalDetailsEvent');
+let NodalOfficerEvent2 = new EventListner();
+NodalOfficerEvent2.setRoleAndIdentity('nodal_officer', 'admin');
+NodalOfficerEvent2.initChannelAndChaincode('civilsupplieschannel', 'civil-supplies-network');
+NodalOfficerEvent2.contractEventListner('NodalOfficerListener2', 'deleteRationCardEvent')
+.catch(err => {});
 
+let NodalOfficerEvent3 = new EventListner();
+NodalOfficerEvent3.setRoleAndIdentity('nodal_officer', 'admin');
+NodalOfficerEvent3.initChannelAndChaincode('civilsupplieschannel', 'civil-supplies-network');
+NodalOfficerEvent3.contractEventListner('NodalOfficerListener3', 'addConsumerEvent')
+.catch(err => {});
+
+let NodalOfficerEvent4 = new EventListner();
+NodalOfficerEvent4.setRoleAndIdentity('nodal_officer', 'admin');
+NodalOfficerEvent4.initChannelAndChaincode('civilsupplieschannel', 'civil-supplies-network');
+NodalOfficerEvent4.contractEventListner('NodalOfficerListener4', 'deleteConsumerEvent')
+.catch(err => {});
+
+let NodalOfficerEvent5 = new EventListner();
+NodalOfficerEvent5.setRoleAndIdentity('nodal_officer', 'admin');
+NodalOfficerEvent5.initChannelAndChaincode('civilsupplieschannel', 'civil-supplies-network');
+NodalOfficerEvent5.contractEventListner('NodalOfficerListener5', 'shiftHouseInSameWardEvent')
+.catch(err => {});
+
+let NodalOfficerEvent6 = new EventListner();
+NodalOfficerEvent6.setRoleAndIdentity('nodal_officer', 'admin');
+NodalOfficerEvent6.initChannelAndChaincode('civilsupplieschannel', 'civil-supplies-network');
+NodalOfficerEvent6.contractEventListner('NodalOfficerListener6', 'shiftHouseInSameLSGBodyEvent')
+.catch(err => {});
+
+let NodalOfficerEvent7 = new EventListner();
+NodalOfficerEvent7.setRoleAndIdentity('nodal_officer', 'admin');
+NodalOfficerEvent7.initChannelAndChaincode('civilsupplieschannel', 'civil-supplies-network');
+NodalOfficerEvent7.contractEventListner('NodalOfficerListener7', 'shiftHouseInSameTalukEvent')
+.catch(err => {});
+
+let NodalOfficerEvent8 = new EventListner();
+NodalOfficerEvent8.setRoleAndIdentity('nodal_officer', 'admin');
+NodalOfficerEvent8.initChannelAndChaincode('civilsupplieschannel', 'civil-supplies-network');
+NodalOfficerEvent8.contractEventListner('NodalOfficerListener8', 'changeMobileNumberEvent')
+.catch(err => {});
+
+let NodalOfficerEvent9 = new EventListner();
+NodalOfficerEvent9.setRoleAndIdentity('nodal_officer', 'admin');
+NodalOfficerEvent9.initChannelAndChaincode('civilsupplieschannel', 'civil-supplies-network');
+NodalOfficerEvent9.contractEventListner('NodalOfficerListener9', 'changeElectricityConnectionStatusEvent')
+.catch(err => {});
+
+let NodalOfficerEvent10 = new EventListner();
+NodalOfficerEvent10.setRoleAndIdentity('nodal_officer', 'admin');
+NodalOfficerEvent10.initChannelAndChaincode('civilsupplieschannel', 'civil-supplies-network');
+NodalOfficerEvent10.contractEventListner('NodalOfficerListener10', 'updateConsumerPersonalDetailsEvent')
+.catch(err => {});
+
+let NodalOfficerEvent11 = new EventListner();
+NodalOfficerEvent11.setRoleAndIdentity('nodal_officer', 'admin');
+NodalOfficerEvent11.initChannelAndChaincode('civilsupplieschannel', 'civil-supplies-network');
+NodalOfficerEvent11.contractEventListner('NodalOfficerListener11', 'updateConsumerProfessionalDetailsEvent')
+.catch(err => {});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

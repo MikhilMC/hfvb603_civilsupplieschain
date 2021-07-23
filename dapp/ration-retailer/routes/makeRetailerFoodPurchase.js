@@ -7,7 +7,8 @@ makeRetailerFoodPurchase.get('/', (req, res) => {
   res.render('makeRetailerFoodPurchase', {
     title: 'RATION RETAILER DASHBOARD',
     subTitle1: 'MAKE RETAILER FOOD PURCHASE',
-    subTitle2: 'READ RETAILER PURCHASE'
+    subTitle2: 'READ RETAILER PURCHASE',
+    errorMessage: ''
   });
 });
 
@@ -17,7 +18,7 @@ makeRetailerFoodPurchase.post('/submit', (req, res) => {
   let rationRetailerId = req.body.rationRetailerId;
   let rationCardColour = req.body.rationCardColour;
   let itemName = req.body.itemName;
-  
+
   let RationRetailerClient = new ClientApplication();
   RationRetailerClient.setRoleAndIdentity('ration_retailer', 'rationRetailerAdmin');
   RationRetailerClient.initChannelAndChaincode('civilsupplieschannel', 'civil-supplies-network');

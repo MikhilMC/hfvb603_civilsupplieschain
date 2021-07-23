@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>
+    <%=title%>
+  </title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link rel="stylesheet" href="/stylesheets/bootstrap.min.css" />
+  <link rel='stylesheet' href='/stylesheets/dashboard.css' />
+</head>
+
+<body>
+  <h1>
+    <%= title%>
+  </h1>
+  <div class="form-modal">
+
+    <div id="man-form">
+      <h3>
+        <%= subTitle%>
+      </h3>
+      <table id="man-form" style="margin: 0%;">
+        <thead>
+          <tr>
+            <th scope="col">CONSUMER PURCHASE NUMBER</th>
+            <th scope="col">ITEM NAME</th>
+            <th scope="col">PRICE PER QUANTITY</th>
+            <th scope="col">QUANTITY</th>
+            <th scope="col">PRICE</th>
+            <th scope="col">PURCHASE DATE</th>
+          </tr>
+        </thead>
+        <%for (let i=0; i < purchases.length; i++) { %>
+          <tr>
+            <th scope="row">
+              <%=purchases[i]['Key']%>
+            </th>
+            <td>
+              <%=purchases[i]['Record']['itemName']%>
+            </td>
+            <td>
+              <%=purchases[i]['Record']['pricePerQuantity']%>
+            </td>
+            <td>
+              <%=purchases[i]['Record']['quantity']%>
+            </td>
+            <td>
+              <%=purchases[i]['Record']['price']%>
+            </td>
+            <td>
+              <%=purchases[i]['Record']['purchaseDate']%>
+            </td>
+          </tr>
+          <%}%>
+      </table>
+
+    </div>
+
+  </div>
+  <script src="/javascripts/popper.js"></script>
+  <script src="/javascripts/bootstrap.min.js"></script>
+  <script src="/javascripts/index.js"></script>
+</body>
+
+</html>
